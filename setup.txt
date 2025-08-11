@@ -1,0 +1,27 @@
+Setup
+
+Install Dependencies:
+
+bash
+pip install google-cloud-aiplatform google-cloud-bigquery google-cloud-secret-manager vertexai
+
+GCP Setup:
+
+Enable Vertex AI API
+Enable BigQuery API
+Enable Secret Manager API
+Create BigQuery dataset and table for consumer data
+Store email credentials in Secret Manager
+
+
+Authentication:
+
+bash 
+gcloud auth application-default login
+
+Usage Examples:
+The agent can handle natural language requests like:
+
+"Show me the top 10 customers by sales in the last quarter"
+"Send a notification about the quarterly results to the team"
+"Create a marketing strategy for Gen Z customers to boost engagement" 

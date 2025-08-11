@@ -1,0 +1,7 @@
+google-cloud-aiplatform>=1.64.0
+google-cloud-bigquery>=3.13.0
+google-cloud-secret-manager>=2.10.0
+# if you want to send real email via SMTP this is stdlib; no extra package needed
+# optional niceties
+pandas>=2.0.0
+rich>=13.0.0
