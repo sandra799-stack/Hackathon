@@ -1,7 +1,12 @@
 # agent.py
 import logging
+import vertexai
+from vertexai.generative_models import GenerativeModel
+from google.cloud import bigquery
 from typing import Dict, Any, List
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from config import AgentConfig
 
 # Simulation stubs
@@ -25,38 +30,19 @@ if __name__ != "__main__":
 class GCPAIAgent:
     def __init__(self, config: AgentConfig):
         self.config = config
-        self.simulate = config.simulate
+        logger.info("Config: %s, Service: %s, Secret Manager: %s", config, config.project_id, config.location)
+        vertexai.init(project=config.project_id, location=config.location)
+        # instantiate the model wrapper
+        self.vertex_model = GenerativeModel(config.model_name)
 
-        # Lazy init clients (only when simulate == False)
-        self.bq_client = None
-        self.secret_client = None
-        self.vertex_model = None
-
-        if not self.simulate:
-            # import here so simulation doesn't require these packages
-            try:
-                import vertexai
-                from vertexai.generative_models import GenerativeModel
-                from google.cloud import bigquery, secretmanager
-
-                vertexai.init(project=config.project_id, location=config.location)
-                # instantiate the model wrapper
-                self.vertex_model = GenerativeModel(config.model_name)
-
-                self.bq_client = bigquery.Client(project=config.project_id)
-                self.secret_client = secretmanager.SecretManagerServiceClient()
-                logger.info("Initialized Vertex AI, BigQuery, and Secret Manager clients.")
-            except Exception as e:
-                logger.exception("Failed to initialize GCP clients - ensure packages are installed and authenticated.")
-                raise
+        self.bq_client = bigquery.Client(project=config.project_id)
+        self.secret_client = secretmanager.SecretManagerServiceClient()
+        logger.info("Initialized Vertex AI, BigQuery, and Secret Manager clients.")
 
     # -------------------------
     # Utility: retrieve secret
     # -------------------------
     def _get_secret(self, secret_id: str) -> str:
-        if self.simulate:
-            logger.info(f"[SIM] get_secret('{secret_id}') -> returning placeholder")
-            return f"SIMULATED_SECRET_FOR_{secret_id}"
         name = f"projects/{self.config.project_id}/secrets/{secret_id}/versions/latest"
         response = self.secret_client.access_secret_version(request={"name": name})
         return response.payload.data.decode("UTF-8")
@@ -70,10 +56,6 @@ class GCPAIAgent:
         timeframe: 'last_month' | 'last_quarter' | 'last_year'
         metric: column name (must exist in dataset)
         """
-        if self.simulate:
-            ranked = sorted(DUMMY_SALES_DATA, key=lambda x: x.get(metric, 0), reverse=True)
-            return {"status": "success", "data": ranked[:10]}
-
         # Real BigQuery query
         time_expr = {
             "last_month": "DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)",
@@ -110,21 +92,7 @@ class GCPAIAgent:
         Real mode: reads 'gmail-app-password' and 'sender-email' from Secret Manager and sends via SMTP.
         Simulation: prints message and returns success.
         """
-        if users is None:
-            users = self.config.notification_users
-
-        if self.simulate:
-            logger.info("[SIMULATED EMAIL NOTIFICATION]")
-            logger.info(f"Subject: AI Agent Notification")
-            logger.info(f"Content: {content}")
-            logger.info(f"Recipients: {users}")
-            return {"status": "completed", "successful_sends": users, "failed_sends": []}
-
         # Real sending via SMTP using secrets (example)
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-
         try:
             smtp_password = self._get_secret("gmail-app-password")
             sender_email = self._get_secret("sender-email")
@@ -158,14 +126,6 @@ class GCPAIAgent:
     # Tool: define strategy
     # -------------------------
     def define_strategy(self, group: str, goal: str) -> Dict[str, Any]:
-        if self.simulate:
-            strategy = [
-                f"Target {group} with social-first content.",
-                "Use short-form video (TikTok, Reels).",
-                "Leverage micro-influencers and user-generated content.",
-            ]
-            return {"status": "success", "strategy": strategy}
-
         try:
             # Use the same GenerativeModel instance created in __init__
             prompt = f"Create a practical marketing strategy for group: {group}. Goal: {goal}."
@@ -193,24 +153,8 @@ class GCPAIAgent:
     # Chat wrapper: minimal example using model.start_chat + function-calling detection
     # -------------------------
     def chat(self, message: str) -> str:
-        if self.simulate:
-            # simple heuristic routing so main.py examples work without Vertex AI
-            m = message.lower()
-            if "rank" in m and "sales" in m:
-                out = self.rank_data()
-                if out.get("status") == "success":
-                    lines = [f"{i+1}. {r['customer_name']} - ${r['metric_value']}" for i, r in enumerate(out["data"])]
-                    return "\n".join(lines)
-                return str(out)
-
-            if "notify" in m or "notification" in m or "send" in m:
-                return self.send_notifications("Our new product is live! Please prepare the campaign.")
-
-            # fallback: marketing strategy
-            return "\n".join(self.define_strategy("millennials", "increase engagement")["strategy"])
-
-        # Real Vertex AI flow — start a chat, allow model to ask for tools (simplified)
         try:
+        # Real Vertex AI flow — start a chat, allow model to ask for tools (simplified)
             chat = self.vertex_model.start_chat()
             response = chat.send_message(message)
             # If the model returns text directly:

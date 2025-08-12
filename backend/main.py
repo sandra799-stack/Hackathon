@@ -2,7 +2,7 @@ from agent import GCPAIAgent
 from config import AgentConfig
 
 def main():
-    config = AgentConfig(project_id="your-gcp-project-id")
+    config = AgentConfig()
     agent = GCPAIAgent(config)
 
     examples = [
