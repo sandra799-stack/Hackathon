@@ -75,8 +75,10 @@ export function useCategories(): UseCategoriesReturn {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchQuery !== '') {
+      if (searchQuery.trim() !== '') {
         searchCategories(searchQuery);
+      } else {
+        searchCategories('');
       }
     }, 300);
 
