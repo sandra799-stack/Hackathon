@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: User
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: HackathonDb
+    ports:
+      - "5400:5432"

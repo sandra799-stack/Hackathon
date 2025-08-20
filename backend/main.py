@@ -41,3 +41,13 @@ def happy_hour(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"Exclusive Happy Hour! Get 20% off from {happy_hour}:00 to {happy_hour + 1}:00 today only! Enjoy your day!"
     # notify_users
+
+@app.get("/promotions/birthday/{merchant_id}")
+def happy_hour(merchant_id: int):
+    """
+    Endpoint to be called from the scheduler to apply birthday promotion
+    """
+    users = get_birthdays_last_month_by_merchant(merchant_id)
+    emails = get_users_email_by_merchant_id(merchant_id)
+    email_body = f"It’s your special day 🎉 Enjoy 1 free item from our hand-picked birthday selection!"
+    # notify_users

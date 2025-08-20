@@ -8,3 +8,7 @@ rich>=13.0.0
 uvicorn==0.35.0
 fastapi==0.116.1
 dotenv==0.9.9
+sqlalchemy==2.0.32
+psycopg2-binary==2.9.9
+google-cloud-scheduler
+alembic
