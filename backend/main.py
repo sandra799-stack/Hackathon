@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from cloud_functions import schedule_job, delete_job, logging
 from db import *
-import load_dotenv, os
+import dotenv, os
 load_dotenv()
 
 app = FastAPI()
@@ -26,11 +26,25 @@ def create_scheduled_job(job_name: str, merchant_id: int):
     if job_name not in endpoints:
         raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
     logging.info(f"Received request to create job: {job_name} from merchant: {merchant_id}")
-    url = endpoints['job_name']['url']
-    schedule = endpoints['job_name']['schedule']
+    url = endpoints[job_name]['url']
+    schedule = endpoints[job_name]['schedule']
     job_name = f"{job_name}-{merchant_id}"
-    schedule_job(job_name, url, schedule)
-    return {"message": f"Cloud Scheduler job '{job_name}' created."}
+    status = schedule_job(job_name, url, schedule)
+    if status:
+        return {"message": f"Cloud Scheduler job '{job_name}' created."}
+    else:
+         raise HTTPException(status_code=500, detail=f"Error creating job.")
+
+@app.get("/delete-job/{merchant_id}/{job_name}")
+def delete_scheduled_job(job_name: str, merchant_id: int):
+    """
+    Endpoint to delete a cloud Scheduled job.
+    """
+    if job_name not in endpoints:
+        raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
+    logging.info(f"Received request to create job: {job_name} from merchant: {merchant_id}")
+    delete_job(merchant_id, job_name)
+    return {"message": f"Cloud Scheduler job '{job_name}' deleted."}
 
 @app.get("/promotions/happy-hour/{merchant_id}")
 def happy_hour(merchant_id: int):
