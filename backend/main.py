@@ -1,7 +1,11 @@
-from fastapi import FastAPI, HTTPException
-from cloud_functions import schedule_job, delete_job, logging
+from requests import Session
+from applicationDb import SessionLocal
+from fastapi import FastAPI, HTTPException , Depends
+from cloud_functions import schedule_job, logging
 from db import *
-import dotenv, os
+from dotenv import load_dotenv
+from models import Base
+import crud, schema
 load_dotenv()
 
 app = FastAPI()
@@ -65,3 +69,16 @@ def happy_hour(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"It’s your special day 🎉 Enjoy 1 free item from our hand-picked birthday selection!"
     # notify_users
+
+# Dependency to get DB session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+@app.get("/promotions/{merchant_id}", response_model=list[schema.PromotionWithStatus])
+def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)):
+    rows = crud.get_promotions(db, merchant_id)
+    return [dict(row._mapping) for row in rows]
