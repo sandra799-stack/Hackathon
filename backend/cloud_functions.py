@@ -1,13 +1,15 @@
 from google.cloud import scheduler_v1
-import google.auth
+from google.oauth2 import service_account
 from google.api_core.exceptions import NotFound
 import logging, os
+from fastapi import HTTPException
 from dotenv import load_dotenv
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION_ID = os.getenv("LOCATION_ID")
+KEY_PATH = os.getenv("KEY_PATH")
 
 def schedule_job(job_name: str, target_url: str, cron_schedule: str):
     """
@@ -22,10 +24,8 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
     # saved by `gcloud auth application-default login`.
     try:
         logging.info("Loading Application Default Credentials...")
-        credentials, project = google.auth.default(
-            scopes=['https://www.googleapis.com/auth/cloud-platform']
-        )
-        logging.info(f"Credentials loaded successfully for project: {project}")
+        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+        logging.info(f"Credentials loaded successfully")
 
         # Create a client with the loaded credentials
         client = scheduler_v1.CloudSchedulerClient(credentials=credentials)
@@ -43,12 +43,14 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
         )
 
         logging.info(f"Attempting to create job: {job_name}...")
-        response = client.create_job(request={"parent": parent, "job": job})
+        client.create_job(request={"parent": parent, "job": job})
         logging.info(f"Job created {job_name}")
+        return True
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating job. {e}")
 
-def delete_job(job_name: str):
+def delete_job(merchant_id: int, job_name: str):
     """
     Deletes a Cloud Scheduler job.
     
@@ -57,20 +59,18 @@ def delete_job(job_name: str):
     """
     try:
         logging.info("Loading Application Default Credentials...")
-        credentials, project = google.auth.default(
-            scopes=['https://www.googleapis.com/auth/cloud-platform']
-        )
-        print(f"Credentials loaded successfully for project: {project}")
+        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+        print(f"Credentials loaded successfully")
 
         client = scheduler_v1.CloudSchedulerClient(credentials=credentials)
-        job_name = f"projects/{PROJECT_ID}/locations/{LOCATION_ID}/jobs/{job_name}"
+        job_name = f"projects/{PROJECT_ID}/locations/{LOCATION_ID}/jobs/{job_name}-{merchant_id}"
         
         logging.info(f"Attempting to delete job: {job_name}...")
         client.delete_job(request={"name": job_name})
-
         logging.info(f"Job {job_name} deleted successfully!")
-
+        return True
     except NotFound:
-        logging.error(f"Error: Job '{job_name}' not found. It may have already been deleted.")
+        raise HTTPException(status_code=404, detail=f"Error: Job '{job_name}' not found. It may have already been deleted.")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"Error deleting job.")
