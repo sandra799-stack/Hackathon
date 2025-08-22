@@ -1,35 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Search, Clock, Star, Users, Share2, Target, X } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { Search, Clock, Star, Users, Share2, Target, X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Coupon {
-  id: string
-  name: string
-  description: string
-  icon: React.ReactNode
-  category: string
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  category: string;
 }
 
-const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: () => void; onLogin: () => void }) => {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
+const LoginModal = ({
+  isOpen,
+  onClose,
+  onLogin,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onLogin: () => void;
+}) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (username.trim() && password.trim()) {
-      onLogin()
-      setUsername("")
-      setPassword("")
+    e.preventDefault();
+    if (username.trim() === "loving_user" && password.trim() === "123456") {
+      localStorage.setItem("user_id", "1");
+      onLogin();
+      setUsername("");
+      setPassword("");
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -40,10 +49,15 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: ()
             <X className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-muted-foreground mb-6">Please log in to activate promotions and enjoy exclusive perks!</p>
+        <p className="text-muted-foreground mb-6">
+          Please log in to activate promotions and enjoy exclusive perks!
+        </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Username
             </label>
             <Input
@@ -57,7 +71,10 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: ()
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Password
             </label>
             <Input
@@ -71,18 +88,26 @@ const LoginModal = ({ isOpen, onClose, onLogin }: { isOpen: boolean; onClose: ()
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <Button type="submit" className="flex-1 bg-accent text-accent-foreground hover:bg-accent/80">
+            <Button
+              type="submit"
+              className="flex-1 bg-accent text-accent-foreground hover:bg-accent/80"
+            >
               Log In
             </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 bg-transparent"
+            >
               Cancel
             </Button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const LovingLoyaltyLogo = () => (
   <div className="w-32 h-24 flex items-center justify-center">
@@ -92,7 +117,7 @@ const LovingLoyaltyLogo = () => (
       className="w-32 h-24 object-contain brightness-0 invert"
     />
   </div>
-)
+);
 
 const AnimatedCake = () => (
   <div className="w-8 h-8 relative animate-bounce">
@@ -115,38 +140,47 @@ const AnimatedCake = () => (
       <path d="M17 4h.01" />
     </svg>
   </div>
-)
+);
 
 const AnimatedUsers = () => (
   <div className="w-8 h-8 relative animate-pulse">
     <Users className="w-8 h-8" />
   </div>
-)
+);
 
 const AnimatedShare2 = () => (
-  <div className="w-8 h-8 relative animate-pulse" style={{ animationDuration: "2s" }}>
+  <div
+    className="w-8 h-8 relative animate-pulse"
+    style={{ animationDuration: "2s" }}
+  >
     <Share2 className="w-8 h-8" />
   </div>
-)
+);
 
 const AnimatedStar = () => (
   <div className="relative">
     <Star className="w-8 h-8 animate-ping absolute" />
     <Star className="w-8 h-8 relative" />
   </div>
-)
+);
 
 const AnimatedClock = () => (
-  <div className="w-8 h-8 relative animate-bounce" style={{ animationDelay: "0.5s" }}>
+  <div
+    className="w-8 h-8 relative animate-bounce"
+    style={{ animationDelay: "0.5s" }}
+  >
     <Clock className="w-8 h-8" />
   </div>
-)
+);
 
 const AnimatedTarget = () => (
-  <div className="w-8 h-8 relative animate-pulse" style={{ animationDelay: "1s" }}>
+  <div
+    className="w-8 h-8 relative animate-pulse"
+    style={{ animationDelay: "1s" }}
+  >
     <Target className="w-8 h-8" />
   </div>
-)
+);
 
 const coupons: Coupon[] = [
   {
@@ -191,46 +225,58 @@ const coupons: Coupon[] = [
     icon: <AnimatedTarget />,
     category: "loyalty",
   },
-]
+];
 
 export default function CouponsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [activatedCoupons, setActivatedCoupons] = useState<Coupon[]>([])
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activatedCoupons, setActivatedCoupons] = useState<Coupon[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const filteredCoupons = coupons.filter(
     (coupon) =>
       coupon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       coupon.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coupon.category.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      coupon.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const availableCoupons = filteredCoupons.filter(
-    (coupon) => !activatedCoupons.some((activated) => activated.id === coupon.id),
-  )
+    (coupon) =>
+      !activatedCoupons.some((activated) => activated.id === coupon.id)
+  );
 
   const activateCoupon = (coupon: Coupon) => {
     if (!isLoggedIn) {
-      setShowLoginModal(true)
-      return
+      setShowLoginModal(true);
+      return;
     }
-    setActivatedCoupons((prev) => [...prev, coupon])
-  }
+    setActivatedCoupons((prev) => [...prev, coupon]);
+    setSearchTerm("");
+  };
 
   const deactivateCoupon = (couponId: string) => {
-    setActivatedCoupons((prev) => prev.filter((coupon) => coupon.id !== couponId))
-  }
+    setActivatedCoupons((prev) =>
+      prev.filter((coupon) => coupon.id !== couponId)
+    );
+  };
 
   const handleLogin = () => {
-    setIsLoggedIn(true)
-    setShowLoginModal(false)
-  }
+    setIsLoggedIn(true);
+    setShowLoginModal(false);
+  };
 
   const handleLogout = () => {
-    setIsLoggedIn(false)
-    setActivatedCoupons([])
-  }
+    setIsLoggedIn(false);
+    setActivatedCoupons([]);
+    localStorage.removeItem("user_id");
+  };
+
+  useEffect(() => {
+    const user_id = localStorage.getItem("user_id");
+    if (user_id) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -248,7 +294,9 @@ export default function CouponsPage() {
             <div className="flex items-center">
               {isLoggedIn ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-sm opacity-90">Welcome back!</span>
+                  <span className="text-sm opacity-90">
+                    Welcome back, Loving_user!
+                  </span>
                   <Button
                     variant="outline"
                     size="default"
@@ -271,37 +319,38 @@ export default function CouponsPage() {
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-center mb-2">🎉 Promotion and Marketing</h1>
-          <p className="text-center text-lg opacity-90">Discover amazing deals and activate your favorite perks!</p>
+          <h1 className="text-4xl font-bold text-center mb-2">
+            🎉 Promotion and Marketing
+          </h1>
+          <p className="text-center text-lg opacity-90">
+            Discover amazing deals and activate your favorite perks!
+          </p>
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Search promotions by name, category, or description"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-3 text-base rounded-lg border-2 border-border focus:border-primary transition-colors w-full placeholder:text-muted-foreground/70"
-            />
-          </div>
-        </div>
-
         {/* Activated Promotions */}
         {activatedCoupons.length > 0 && (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">🎊 Activated Promotions</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
+              🎊 Activated Promotions
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {activatedCoupons.map((coupon) => (
-                <Card key={coupon.id} className="bg-muted border-2 border-accent shadow-md">
+                <Card
+                  key={coupon.id}
+                  className="bg-muted border-2 border-accent shadow-md"
+                >
                   <CardContent className="p-6 text-center">
-                    <div className="text-accent mb-4 flex justify-center">{coupon.icon}</div>
-                    <h3 className="font-bold text-lg text-card-foreground mb-2">{coupon.name}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{coupon.description}</p>
+                    <div className="text-accent mb-4 flex justify-center">
+                      {coupon.icon}
+                    </div>
+                    <h3 className="font-bold text-lg text-card-foreground mb-2">
+                      {coupon.name}
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {coupon.description}
+                    </p>
                     <Button
                       variant="outline"
                       size="default"
@@ -317,10 +366,25 @@ export default function CouponsPage() {
           </section>
         )}
 
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search promotions by name, category, or description"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-3 text-base rounded-lg border-2 border-border focus:border-primary transition-colors w-full placeholder:text-muted-foreground/70"
+            />
+          </div>
+        </div>
         {/* Available Promotions */}
         <section className="mb-12">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Available Promotions</h2>
+            <h2 className="text-2xl font-bold text-foreground">
+              Available Promotions
+            </h2>
           </div>
           {availableCoupons.length === 0 ? (
             <div className="text-center py-12">
@@ -339,7 +403,9 @@ export default function CouponsPage() {
                 >
                   <CardContent className="p-6 text-center flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="text-primary mb-4 flex justify-center group-hover:text-white">{coupon.icon}</div>
+                      <div className="text-primary mb-4 flex justify-center group-hover:text-white">
+                        {coupon.icon}
+                      </div>
                       <h3 className="font-bold text-lg text-card-foreground mb-2 group-hover:text-white">
                         {coupon.name}
                       </h3>
@@ -364,7 +430,11 @@ export default function CouponsPage() {
       </div>
 
       {/* Login Modal */}
-      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleLogin}
+      />
     </div>
-  )
+  );
 }
