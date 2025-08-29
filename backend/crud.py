@@ -1,10 +1,11 @@
 from sqlalchemy import func
 from requests import Session
 from models import * 
+from sqlalchemy import text
 
 def get_promotions(db: Session , merchant_id: str):
     sql = text("""
-        select Id,description, promotion_name,
+        select Id,description, promotion_name,icon,
 	    case when ap.promotion_id is null then False else True end AS is_active
         From public.promotions p
         Left join (
