@@ -24,7 +24,7 @@ def clear_promotions(db: Session):
 
 def create_promotions_bulk(db: Session, promotions_data: list[dict]):
     """Insert multiple promotions at once."""
-    promotions = [Promotion(description = data['description'], promotion_name = data['promotion_name']) for data in promotions_data]
+    promotions = [Promotion(description = data['description'], promotion_name = data['promotion_name'] ,icon = data['icon']) for data in promotions_data]
     db.add_all(promotions) # efficient bulk insert
     db.commit()
     db.close()
