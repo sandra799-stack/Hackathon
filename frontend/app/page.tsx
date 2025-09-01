@@ -7,13 +7,14 @@ import { Search, Clock, Star, Users, Share2, Target, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface Coupon {
-  id: string;
-  name: string;
+  id: number;
+  promotion_name: string;
   description: string;
-  icon: React.ReactNode;
-  category: string;
+  icon: string;
+  is_active: boolean;
 }
 
 const LoginModal = ({
@@ -182,82 +183,191 @@ const AnimatedTarget = () => (
   </div>
 );
 
-const coupons: Coupon[] = [
-  {
-    id: "1",
-    name: "Birthday Bash",
-    description: "Special birthday discounts just for you!",
-    icon: <AnimatedCake />,
-    category: "birthday",
-  },
-  {
-    id: "2",
-    name: "Know Your Customer",
-    description: "Personalized offers based on your preferences",
-    icon: <AnimatedUsers />,
-    category: "customer",
-  },
-  {
-    id: "3",
-    name: "Social Media Posts",
-    description: "Share and earn exclusive social rewards",
-    icon: <AnimatedShare2 />,
-    category: "social",
-  },
-  {
-    id: "4",
-    name: "Recommend Items",
-    description: "Get rewards for recommending products",
-    icon: <AnimatedStar />,
-    category: "referral",
-  },
-  {
-    id: "5",
-    name: "Happy Hour",
-    description: "Evening specials for the perfect unwind",
-    icon: <AnimatedClock />,
-    category: "time",
-  },
-  {
-    id: "6",
-    name: "Brand Ambassador",
-    description: "Exclusive perks for our loyal customers",
-    icon: <AnimatedTarget />,
-    category: "loyalty",
-  },
-];
+const getIconComponent = (iconName: string): React.ReactNode => {
+  switch (iconName) {
+    case "AnimatedCake":
+      return <AnimatedCake />;
+    case "AnimatedUsers":
+      return <AnimatedUsers />;
+    case "AnimatedShare2":
+      return <AnimatedShare2 />;
+    case "AnimatedStar":
+      return <AnimatedStar />;
+    case "AnimatedClock":
+      return <AnimatedClock />;
+    case "AnimatedTarget":
+      return <AnimatedTarget />;
+    default:
+      return <AnimatedStar />;
+  }
+};
+
+const fetchPromotions = async (merchantId: string): Promise<Coupon[]> => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/promotions/${merchantId}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch promotions");
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const scheduleJob = async (
+  merchantId: string,
+  promotionName: string
+): Promise<void> => {
+  try {
+    const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/schedule-job/${merchantId}/${transformedName}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to schedule job");
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteJob = async (
+  merchantId: string,
+  promotionName: string
+): Promise<void> => {
+  try {
+    const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/delete-job/${merchantId}/${transformedName}`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to delete job");
+    }
+  } catch (error) {
+    throw error;
+  }
+};
 
 export default function CouponsPage() {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activatedCoupons, setActivatedCoupons] = useState<Coupon[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activatingCoupons, setActivatingCoupons] = useState<Set<number>>(
+    new Set()
+  );
+  const [removingCoupons, setRemovingCoupons] = useState<Set<number>>(
+    new Set()
+  );
 
   const filteredCoupons = coupons.filter(
     (coupon) =>
-      coupon.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coupon.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coupon.category.toLowerCase().includes(searchTerm.toLowerCase())
+      coupon.promotion_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      coupon.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const availableCoupons = filteredCoupons.filter(
-    (coupon) =>
-      !activatedCoupons.some((activated) => activated.id === coupon.id)
-  );
+  const availableCoupons = isLoggedIn
+    ? filteredCoupons.filter(
+        (coupon) =>
+          !coupon.is_active &&
+          !activatedCoupons.some((activated) => activated.id === coupon.id)
+      )
+    : filteredCoupons;
 
-  const activateCoupon = (coupon: Coupon) => {
+  const activateCoupon = async (coupon: Coupon) => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
-    setActivatedCoupons((prev) => [...prev, coupon]);
-    setSearchTerm("");
+
+    if (activatingCoupons.has(coupon.id)) {
+      return;
+    }
+
+    setActivatingCoupons((prev) => new Set(prev).add(coupon.id));
+
+    try {
+      const merchantId = localStorage.getItem("user_id");
+      if (merchantId) {
+        await scheduleJob(merchantId, coupon.promotion_name);
+        // Refresh promotions list to get updated state
+        const promotions = await fetchPromotions("1");
+        setCoupons(promotions);
+        const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+        setActivatedCoupons(activeCoupons);
+
+        toast({
+          title: "Coupon Removed!",
+          description: `${coupon.promotion_name} has been successfully removed.`,
+          variant: "success",
+        });
+        setSearchTerm("");
+
+        toast({
+          title: "Coupon Activated!",
+          description: `${coupon.promotion_name} has been successfully activated.`,
+          variant: "success",
+        });
+      }
+    } catch {
+      toast({
+        title: "Activation Failed!",
+        description: `Failed to activate ${coupon.promotion_name}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setActivatingCoupons((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(coupon.id);
+        return newSet;
+      });
+    }
   };
 
-  const deactivateCoupon = (couponId: string) => {
-    setActivatedCoupons((prev) =>
-      prev.filter((coupon) => coupon.id !== couponId)
-    );
+  const deactivateCoupon = async (coupon: Coupon) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    setRemovingCoupons((prev) => new Set(prev).add(coupon.id));
+
+    try {
+      const merchantId = localStorage.getItem("user_id");
+      if (merchantId) {
+        await deleteJob(merchantId, coupon.promotion_name);
+        // Refresh promotions list to get updated state
+        const promotions = await fetchPromotions("1");
+        setCoupons(promotions);
+        const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+        setActivatedCoupons(activeCoupons);
+
+        toast({
+          title: "Coupon Removed!",
+          description: `${coupon.promotion_name} has been successfully removed.`,
+          variant: "success",
+        });
+      }
+    } catch {
+      toast({
+        title: "Removal Failed!",
+        description: `Failed to remove ${coupon.promotion_name}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingCoupons((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(coupon.id);
+        return newSet;
+      });
+    }
   };
 
   const handleLogin = () => {
@@ -278,19 +388,40 @@ export default function CouponsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadPromotions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Always fetch promotions with hardcoded merchantId '1'
+        const promotions = await fetchPromotions("1");
+        setCoupons(promotions);
+
+        // Only show activated coupons if user is logged in
+        if (isLoggedIn) {
+          const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+          setActivatedCoupons(activeCoupons);
+        } else {
+          setActivatedCoupons([]);
+        }
+      } catch {
+        setError("Failed to load promotions");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPromotions();
+  }, [isLoggedIn]);
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="bg-primary text-primary-foreground py-6 px-4">
         <div className="max-w-6xl mx-auto">
-          {/* Brand and User Info Section */}
           <div className="flex justify-between items-start mb-4">
-            {/* Brand Logo and Name */}
             <div className="flex items-center space-x-3">
               <LovingLoyaltyLogo />
             </div>
-
-            {/* Login/Logout Button */}
             <div className="flex items-center">
               {isLoggedIn ? (
                 <div className="flex items-center gap-4">
@@ -328,8 +459,10 @@ export default function CouponsPage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Activated Promotions */}
+      <div
+        className="max-w-6xl mx-auto px-4 py-8"
+        style={{ display: !coupons.length ? "none" : "" }}
+      >
         {activatedCoupons.length > 0 && (
           <section className="mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-6 text-center">
@@ -339,14 +472,14 @@ export default function CouponsPage() {
               {activatedCoupons.map((coupon) => (
                 <Card
                   key={coupon.id}
-                  className="bg-muted border-2 border-accent shadow-md"
+                  className="w-80 h-auto flex flex-col bg-muted border-2 border-accent shadow-md"
                 >
                   <CardContent className="p-6 text-center">
                     <div className="text-accent mb-4 flex justify-center">
-                      {coupon.icon}
+                      {getIconComponent(coupon.icon)}
                     </div>
                     <h3 className="font-bold text-lg text-card-foreground mb-2">
-                      {coupon.name}
+                      {coupon.promotion_name}
                     </h3>
                     <p className="text-muted-foreground text-sm mb-4">
                       {coupon.description}
@@ -354,10 +487,18 @@ export default function CouponsPage() {
                     <Button
                       variant="outline"
                       size="default"
-                      onClick={() => deactivateCoupon(coupon.id)}
+                      onClick={() => deactivateCoupon(coupon)}
+                      disabled={removingCoupons.has(coupon.id)}
                       className="text-sm"
                     >
-                      Remove
+                      {removingCoupons.has(coupon.id) ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                          Removing...
+                        </>
+                      ) : (
+                        "Remove"
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -366,7 +507,6 @@ export default function CouponsPage() {
           </section>
         )}
 
-        {/* Search Bar */}
         <div className="mb-8">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -379,14 +519,40 @@ export default function CouponsPage() {
             />
           </div>
         </div>
-        {/* Available Promotions */}
         <section className="mb-12">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-foreground">
               Available Promotions
             </h2>
           </div>
-          {availableCoupons.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground text-lg">
+                Loading promotions...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 text-lg mb-4">{error}</p>
+              <Button
+                onClick={() => {
+                  const user_id = localStorage.getItem("user_id");
+                  if (user_id && isLoggedIn) {
+                    setLoading(true);
+                    setError(null);
+                    fetchPromotions(user_id)
+                      .then(setCoupons)
+                      .catch(() => setError("Failed to load promotions"))
+                      .finally(() => setLoading(false));
+                  }
+                }}
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : availableCoupons.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">
                 {searchTerm
@@ -399,15 +565,15 @@ export default function CouponsPage() {
               {availableCoupons.map((coupon) => (
                 <Card
                   key={coupon.id}
-                  className="hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 border-border hover:border-primary h-64 flex flex-col hover:bg-accent group"
+                  className="hover:shadow-lg transition-all duration-300 hover:scale-105 border-2 border-border hover:border-primary h-auto flex flex-col hover:bg-accent group"
                 >
                   <CardContent className="p-6 text-center flex-1 flex flex-col justify-between">
                     <div>
                       <div className="text-primary mb-4 flex justify-center group-hover:text-white">
-                        {coupon.icon}
+                        {getIconComponent(coupon.icon)}
                       </div>
                       <h3 className="font-bold text-lg text-card-foreground mb-2 group-hover:text-white">
-                        {coupon.name}
+                        {coupon.promotion_name}
                       </h3>
                       <p className="text-muted-foreground text-sm mb-4 group-hover:text-white/90">
                         {coupon.description}
@@ -416,9 +582,17 @@ export default function CouponsPage() {
                     <div>
                       <Button
                         onClick={() => activateCoupon(coupon)}
-                        className="bg-accent text-accent-foreground hover:bg-accent/80 transition-colors duration-200 group-hover:bg-white group-hover:text-accent group-hover:hover:bg-white/90"
+                        disabled={activatingCoupons.has(coupon.id)}
+                        className="bg-accent text-accent-foreground hover:bg-accent/80 transition-colors duration-200 group-hover:bg-white group-hover:text-accent group-hover:hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Activate
+                        {activatingCoupons.has(coupon.id) ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                            Activating...
+                          </>
+                        ) : (
+                          "Activate"
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -429,7 +603,6 @@ export default function CouponsPage() {
         </section>
       </div>
 
-      {/* Login Modal */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
