@@ -1,12 +1,13 @@
 from requests import Session
 from fastapi import FastAPI, HTTPException , Depends
-from cloud_functions import schedule_job, delete_job, logging
+from cloud_functions import schedule_job, delete_job, logging, send_email
 from db import *
 from app_db import SessionLocal
 from crud import insert_active_promotion, delete_active_promotion, get_promotions
 from dotenv import load_dotenv
 from models import Base
 import schema
+from pydantic import BaseModel
 load_dotenv()
 
 app = FastAPI()
@@ -22,6 +23,10 @@ endpoints = {
         "schedule": "0 0 * * *"
     }
 }
+class EmailRequest(BaseModel):
+    to: str
+    subject: str
+    body: str
 
 # Dependency to get DB session
 def get_db():
@@ -70,6 +75,12 @@ def happy_hour(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"Exclusive Happy Hour! Get 20% off from {happy_hour}:00 to {happy_hour + 1}:00 today only! Enjoy your day!"
     # notify_users
+    logging.info("Emails will be send")
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject="Happy hour Promotion",
+      body=email_body)
 
 @app.get("/promotions/birthday/{merchant_id}")
 def happy_hour(merchant_id: int):
@@ -80,8 +91,23 @@ def happy_hour(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"It’s your special day 🎉 Enjoy 1 free item from our hand-picked birthday selection!"
     # notify_users
+    logging.info("Emails will be send")
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject="Birthday Promotion",
+      body=email_body)
         
 @app.get("/promotions/{merchant_id}", response_model=list[schema.PromotionWithStatus])
 def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)):
     rows = get_promotions(db, merchant_id)
     return [dict(row._mapping) for row in rows]
+
+# just for testing
+@app.post("/send-email")
+def send_email_endpoint(request: EmailRequest):
+    try:
+        send_email(request.to, request.subject, request.body)
+        return {"status": "success", "message": "Email sent successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

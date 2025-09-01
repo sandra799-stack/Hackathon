@@ -11,6 +11,9 @@ sqlalchemy==2.0.32
 psycopg2-binary==2.9.9
 google-cloud-scheduler
 alembic
-python-dotenv==0.9.9
+python-dotenv
 mysql-connector-python
-
+vertexai
+requests
+langchain
+langchain-google-vertexai

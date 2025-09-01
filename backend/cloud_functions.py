@@ -4,6 +4,9 @@ from google.api_core.exceptions import NotFound
 import logging, os
 from fastapi import HTTPException
 from dotenv import load_dotenv
+import os, ssl, smtplib
+from email.message import EmailMessage
+ 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -74,3 +77,19 @@ def delete_job(merchant_id: int, job_name: str):
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting job.")
+    
+def send_email(to_email: str, subject: str, body: str) -> None:
+    user = os.environ["GMAIL_USER"]
+    app_pw = os.environ["GMAIL_APP_PASSWORD"]
+
+    msg = EmailMessage()
+    msg["From"] = user
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.set_content(body)
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP("smtp.gmail.com", 587) as s:
+        s.starttls(context=context)
+        s.login(user, app_pw)
+        s.send_message(msg)
