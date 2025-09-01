@@ -1,5 +1,6 @@
 from requests import Session
 from fastapi import FastAPI, HTTPException , Depends
+from fastapi.middleware.cors import CORSMiddleware
 from cloud_functions import schedule_job, delete_job, logging, send_email
 from db import *
 from app_db import SessionLocal
@@ -11,6 +12,15 @@ from pydantic import BaseModel
 load_dotenv()
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3001", "http://localhost:3000"],  # Frontend URLs
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 API_BASE_URL = os.getenv("API_BASE_URL")
 
 endpoints = {
@@ -111,3 +121,7 @@ def send_email_endpoint(request: EmailRequest):
         return {"status": "success", "message": "Email sent successfully"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
