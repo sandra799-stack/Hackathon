@@ -1,6 +1,6 @@
 from requests import Session
 from fastapi import FastAPI, HTTPException , Depends
-from cloud_functions import schedule_job, delete_job, logging
+from cloud_functions import schedule_job, delete_job, logging, send_email
 from db import *
 from app_db import SessionLocal
 from crud import insert_active_promotion, delete_active_promotion, get_promotions
@@ -10,6 +10,8 @@ import schema
 from agents.weather_recommendation_agent import recommend_products_by_weather
 from agents.social_media_agent import post_products_to_instagram
 from backend.agents.personalized_recommendation_agent import recommend_personalized_products
+from pydantic import BaseModel
+
 load_dotenv()
 
 app = FastAPI()
@@ -25,6 +27,10 @@ endpoints = {
         "schedule": "0 0 * * *"
     }
 }
+class EmailRequest(BaseModel):
+    to: str
+    subject: str
+    body: str
 
 # Dependency to get DB session
 def get_db():
@@ -73,6 +79,12 @@ def happy_hour(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"Exclusive Happy Hour! Get 20% off from {happy_hour}:00 to {happy_hour + 1}:00 today only! Enjoy your day!"
     # notify_users
+    logging.info("Emails will be send")
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject="Happy hour Promotion",
+      body=email_body)
 
 @app.get("/promotions/birthday/{merchant_id}")
 def birthday(merchant_id: int):
@@ -83,6 +95,12 @@ def birthday(merchant_id: int):
     emails = get_users_email_by_merchant_id(merchant_id)
     email_body = f"It’s your special day 🎉 Enjoy 1 free item from our hand-picked birthday selection!"
     # notify_users
+    logging.info("Emails will be send")
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject="Birthday Promotion",
+      body=email_body)
         
 @app.get("/promotions/{merchant_id}", response_model=list[schema.PromotionWithStatus])
 def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)):
@@ -103,3 +121,12 @@ def post_to_instagram(merchant_id: int):
 @app.get("/recommendations/personalized/{merchant_id}")
 def personalized_recommendation(merchant_id: int):
     recommend_personalized_products(merchant_id)
+
+# just for testing
+@app.post("/send-email")
+def send_email_endpoint(request: EmailRequest):
+    try:
+        send_email(request.to, request.subject, request.body)
+        return {"status": "success", "message": "Email sent successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

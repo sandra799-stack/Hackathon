@@ -1,10 +1,11 @@
 from sqlalchemy import func
 from requests import Session
 from models import * 
+from sqlalchemy import text
 
 def get_promotions(db: Session , merchant_id: str):
     sql = text("""
-        select Id,description, promotion_name,
+        select Id,description, promotion_name,icon,
 	    case when ap.promotion_id is null then False else True end AS is_active
         From public.promotions p
         Left join (
@@ -23,7 +24,7 @@ def clear_promotions(db: Session):
 
 def create_promotions_bulk(db: Session, promotions_data: list[dict]):
     """Insert multiple promotions at once."""
-    promotions = [Promotion(description = data['description'], promotion_name = data['promotion_name']) for data in promotions_data]
+    promotions = [Promotion(description = data['description'], promotion_name = data['promotion_name'] ,icon = data['icon']) for data in promotions_data]
     db.add_all(promotions) # efficient bulk insert
     db.commit()
     db.close()

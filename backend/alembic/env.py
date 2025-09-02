@@ -4,7 +4,7 @@ from alembic import context
 
 # --- Import your database setup ---
 from app_db import Base, APP_DB_URL  # Base = declarative_base()
-
+from models import Base  # Base should include Promotion
 # Alembic Config object
 config = context.config
 
