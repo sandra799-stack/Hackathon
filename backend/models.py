@@ -9,6 +9,7 @@ class Promotion(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String(120), unique=True, nullable=False)
     promotion_name = Column(String(50), unique=True, nullable=False)
+    icon = Column(String(50), unique=False, nullable=True)
     active_promotions = relationship("ActivePromotion", back_populates="promotion")
 
 
