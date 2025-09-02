@@ -17,4 +17,4 @@ langchain-google-vertexai
 langchain
 requests
 vertexai
-instagrapi
+instabot

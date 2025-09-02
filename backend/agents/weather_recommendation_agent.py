@@ -265,8 +265,8 @@ class WeatherProductRecommender:
             HumanMessage(content=f"""
             Current Weather: {weather.condition}, {weather.temperature}°C in {weather.location}
             Recommended Products: {', '.join(recommended_products)}
-            
-            Create a customer notification message about free delivery on these recommended products.
+    
+            Create a raw JSON only containing a customer notification message about free delivery on these recommended products and a subject.
             """)
         ])
         

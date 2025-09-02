@@ -9,8 +9,9 @@ from models import Base
 import schema
 from agents.weather_recommendation_agent import recommend_products_by_weather
 from agents.social_media_agent import post_products_to_instagram
-from backend.agents.personalized_recommendation_agent import recommend_personalized_products
+from agents.personalized_recommendation_agent import recommend_personalized_products
 from pydantic import BaseModel
+import json
 
 load_dotenv()
 
@@ -110,8 +111,16 @@ def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)
 @app.get("/recommendations/weather/{merchant_id}")
 def weather_recommendation(merchant_id: int):
     notification_message = recommend_products_by_weather(merchant_id)
-    return notification_message
-    # notify user
+    notification_message = notification_message.strip("`\n ")
+    if notification_message.startswith("json"):
+        notification_message = notification_message[4:].strip()
+    notification_message = json.loads(notification_message)
+    emails = ['nhelmy@deloitte.com', 'ssadik@deloitte.com'] # relaced with the actual emails from db
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject=notification_message['subject'],
+      body=notification_message['message'])
 
 @app.get("/recommendations/social-media/{merchant_id}")
 def post_to_instagram(merchant_id: int):
