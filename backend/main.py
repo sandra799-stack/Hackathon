@@ -7,6 +7,7 @@ from crud import insert_active_promotion, delete_active_promotion, get_promotion
 from dotenv import load_dotenv
 from models import Base
 import schema
+from agents.weather_recommendation_agent import recommend_products_by_weather
 load_dotenv()
 
 app = FastAPI()
@@ -72,7 +73,7 @@ def happy_hour(merchant_id: int):
     # notify_users
 
 @app.get("/promotions/birthday/{merchant_id}")
-def happy_hour(merchant_id: int):
+def birthday(merchant_id: int):
     """
     Endpoint to be called from the scheduler to apply birthday promotion
     """
@@ -85,3 +86,9 @@ def happy_hour(merchant_id: int):
 def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)):
     rows = get_promotions(db, merchant_id)
     return [dict(row._mapping) for row in rows]
+
+@app.get("/recommendations/weather/{merchant_id}")
+def weather_recommendation(merchant_id: int):
+    notification_message = recommend_products_by_weather(merchant_id)
+    return notification_message
+    # notify user
