@@ -8,6 +8,7 @@ import logging
 import re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from db import get_loyal_users_order_history, get_users_emails
+from cloud_functions import send_email
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -26,13 +27,6 @@ from langchain.schema import HumanMessage, SystemMessage
 from langchain.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
-
-# Email imports
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -83,15 +77,6 @@ class GCPRecommendationSystem:
             location=self.region,
             credentials=credentials
         )
-        
-        # Email configuration from .env file
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.email_user = os.getenv("EMAIL_USER")
-        self.email_password = os.getenv("EMAIL_PASSWORD")
-        
-        if not self.email_user or not self.email_password:
-            logger.warning("EMAIL_USER and EMAIL_PASSWORD not set. Email functionality disabled.")
     
     def analyze_purchase_history(self, purchase_data: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -275,10 +260,10 @@ class GCPRecommendationSystem:
         - Have a clear call-to-action
         - Be professional but engaging
         
-        Generate both a subject line and email body in HTML format.
+        Generate both a subject line and email body.
         Format as:
-        SUBJECT: [subject line]
-        BODY: [HTML email body]
+        SUBJECT: [subject linE]
+        BODY: [email body]
         """
         
         try:
@@ -329,25 +314,10 @@ class GCPRecommendationSystem:
         """
         Send email notification to customer
         """
-        if not self.email_user or not self.email_password:
-            logger.warning(f"Email credentials not configured. Skipping email for customer {customer_id}")
-            return False
-            
         try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = subject
-            msg['From'] = self.email_user
-            msg['To'] = customer_email
-            
-            html_part = MIMEText(html_body, 'html')
-            msg.attach(html_part)
-            
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.email_user, self.email_password)
-                server.send_message(msg)
-            
-            logger.info(f"Email sent successfully to customer {customer_id}")
+            send_email(to_email=customer_email,
+                        subject=subject,
+                        body=html_body)
             return True
             
         except Exception as e:
@@ -375,6 +345,11 @@ class GCPRecommendationSystem:
                 if customer_id in customer_emails:
                     subject, body = self.generate_email_content(customer_id, customer_recs)
                     
+                    # for testing
+                    email_sent = self.send_email_notification(
+                        'nhelmy@deloitte.com', subject, body, customer_id
+                    )
+
                     email_sent = self.send_email_notification(
                         customer_emails[customer_id], subject, body, customer_id
                     )
