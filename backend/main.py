@@ -60,7 +60,27 @@ def delete_scheduled_job(merchant_id: str, job_name: str, db: Session = Depends(
     delete_job(merchant_id, job_name)
     delete_active_promotion(db, merchant_id, job_name)
     return {"message": f"Cloud Scheduler job '{job_name}' deleted."}
-
+    
+#In FastAPI, static paths must be declared before dynamic ones.  
+@app.get("/promotions/know-your-customer")
+def know_your_customer():
+    """
+    Endpoint to be called from the scheduler to apply send google form to the user to know more information
+    """
+    # which_customer ?
+    email_body = "We’d love to know more about you."
+    # notify_users
+    logging.info("Emails will be send")
+    try:
+         send_email(
+         "ssadik@deloitte.com",
+         "Tell Us a Little About Yourself!",
+          body = email_body,
+          form_link="https://forms.gle/dBwmSPf4vPuoYxMG7")
+         return {"status": "success", "message": "Email sent successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    
 @app.get("/promotions/happy-hour/{merchant_id}")
 def happy_hour(merchant_id: int):
     """
