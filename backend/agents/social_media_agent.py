@@ -11,6 +11,7 @@ from db import get_best_selling_products_by_merchant_id, get_least_selling_produ
 import instabot
 # Environment variable loading
 from dotenv import load_dotenv
+import time
 
 # Google and LangChain imports
 import vertexai
@@ -422,8 +423,10 @@ class SocialMediaMarketingBot:
     
     def _post_to_platform(self, post: SocialMediaPost, platform: str) -> Dict[str, Any]:
         """Route post to appropriate platform API"""
-        bot = instabot.Bot()
-        bot.login(username= "", password="", force=True)
+        bot = instabot.Bot(save_logfile=False)
+        username = os.getenv('INSTAGRAM_USERNAME')
+        password = os.getenv('INSTAGRAM_PASSWORD')
+        bot.login(username= username, password=password, force=True)
         caption = post.content
         if post.call_to_action:
             caption += post.call_to_action
@@ -434,13 +437,12 @@ class SocialMediaMarketingBot:
             temp_file = r".\agents\temp_am.jpg"
             shutil.copy(original_file, temp_file)
             bot.upload_photo(temp_file, caption)
-        # elif platform.lower() == "facebook":
-        #     return self.facebook_api.post_content(post)
         else:
             raise ValueError(f"Unsupported platform: {platform}")
-        # bot.logout()
-        shutil.rmtree(r".\config")
+        bot.logout()
         os.remove(r'.\agents\temp_am.jpg.REMOVE_ME')
+        shutil.rmtree(r".\config", ignore_errors=True) 
+        time.sleep(3)
     
     def generate_content_preview(self, 
                                best_selling_products: List[Product], 
@@ -490,11 +492,12 @@ class SocialMediaMarketingBot:
         return previews
 
 # Example usage and setup
-def main(merchant_id):
+def post_products_to_instagram(merchant_id):
     """Example usage of the Social Media Marketing Bot"""
     products = get_best_selling_products_by_merchant_id(merchant_id)
     best_selling_products = []
     for product in products:
+        shutil.rmtree(r".\config", ignore_errors=True) 
         best_selling_products.append(
             Product(
             name = product['product'],
@@ -509,6 +512,7 @@ def main(merchant_id):
     products = get_least_selling_products_by_merchant_id(merchant_id)
     least_selling_products = []
     for product in products:
+        shutil.rmtree(r".\config", ignore_errors=True) 
         least_selling_products.append(
             Product(
             name = product['product'],
@@ -554,9 +558,8 @@ if __name__ == "__main__":
     # Setup environment
     print("Social Media Marketing Automation Bot")
     print("Make sure to create and configure your .env file first")
-    
     # Run the main application
-    main(94025)
+    post_products_to_instagram(94025)
 
     # .env file setup instructions
 """

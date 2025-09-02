@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from models import Base
 import schema
 from agents.weather_recommendation_agent import recommend_products_by_weather
+from agents.social_media_agent import post_products_to_instagram
+from backend.agents.personalized_recommendation_agent import recommend_personalized_products
 load_dotenv()
 
 app = FastAPI()
@@ -92,3 +94,12 @@ def weather_recommendation(merchant_id: int):
     notification_message = recommend_products_by_weather(merchant_id)
     return notification_message
     # notify user
+
+@app.get("/recommendations/social-media/{merchant_id}")
+def post_to_instagram(merchant_id: int):
+    post_products_to_instagram(merchant_id)
+    return
+
+@app.get("/recommendations/personalized/{merchant_id}")
+def personalized_recommendation(merchant_id: int):
+    recommend_personalized_products(merchant_id)

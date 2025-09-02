@@ -1,5 +1,6 @@
 import mysql.connector
 import os
+import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -206,7 +207,7 @@ def get_loyal_customers_by_merchant_id(merchant_id: int):
         AND user_id != 0
         GROUP BY user_id
         ORDER BY orders_number DESC, total_spent DESC
-        LIMIT 10;
+        LIMIT 5;
     '''
     parameter = (merchant_id, )
     cursor.execute(query, parameter)
@@ -216,3 +217,63 @@ def get_loyal_customers_by_merchant_id(merchant_id: int):
         users.append(row['user_id'])
     return users
 
+def get_loyal_users_order_history(merchant_id):
+    conn = mysql.connector.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASS,
+            database=DB_NAME
+    )
+    cursor = conn.cursor(dictionary=True)
+    loyal_users = get_loyal_customers_by_merchant_id(merchant_id)
+    placeholders = ', '.join(['%s'] * len(loyal_users))
+    query = f'''
+        SELECT user_id, title, price, quantity, DATE_FORMAT(FROM_UNIXTIME(created), '%Y-%m-%d') AS purchase_date, item_id 
+        FROM LLDeloitteAIHackathon.fct_order_items oi
+        WHERE user_id  in ({placeholders});
+    '''
+    cursor.execute(query, loyal_users)
+    rows = cursor.fetchall()
+    purchase_data = {
+            'customer_id' : [],
+            'item_id': [],
+            'item_name': [],
+            'purchase_date': [],
+            'quantity': [],
+            'price': []
+    }
+    for row in rows:
+        purchase_data['customer_id'].append(row['user_id'])
+        purchase_data['item_id'].append(row['item_id'])
+        purchase_data['item_name'].append(row['title'])
+        purchase_data['purchase_date'].append(row['purchase_date'])
+        purchase_data['quantity'].append(row['quantity'])
+        purchase_data['price'].append(row['price'])
+
+    purchase_df = pd.DataFrame(purchase_data)
+    purchase_df['purchase_date'] = pd.to_datetime(purchase_df['purchase_date'])
+    return purchase_df
+
+def get_users_emails(users_id):
+    conn = mysql.connector.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASS,
+            database=DB_NAME
+    )
+    cursor = conn.cursor(dictionary=True)
+    placeholders = ', '.join(['%s'] * len(users_id))
+    query = f'''
+        SELECT user_id, email
+        FROM LLDeloitteAIHackathon.dim_users
+        WHERE user_id in ({placeholders})
+        AND email IS NOT NULL;
+    '''
+    cursor.execute(query, users_id)
+    users_emails = {}
+    rows = cursor.fetchall()
+    for row in rows:
+        users_emails[row['user_id']] = row['email'] 
+    return users_emails

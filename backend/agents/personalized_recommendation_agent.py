@@ -1,10 +1,13 @@
 import os
+import sys
 import json
 import pandas as pd
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import logging
 import re
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from db import get_loyal_users_order_history, get_users_emails
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
@@ -99,11 +102,10 @@ class GCPRecommendationSystem:
         customer_stats = purchase_data.groupby('customer_id').agg({
             'item_id': 'count',
             'price': ['sum', 'mean'],
-            'category': lambda x: x.value_counts().to_dict(),
             'purchase_date': ['min', 'max']
         }).round(2)
         
-        item_popularity = purchase_data.groupby(['item_id', 'item_name', 'category']).agg({
+        item_popularity = purchase_data.groupby(['item_id', 'item_name']).agg({
             'customer_id': 'nunique',
             'quantity': 'sum',
             'price': 'mean'
@@ -354,15 +356,15 @@ class GCPRecommendationSystem:
     
     def run_recommendation_pipeline(self, purchase_data: pd.DataFrame, 
                                     customer_emails: Dict[str, str],
-                                    bq_dataset: str = None, 
-                                    bq_table: str = None):
+                                    ):
         """
         Run the complete recommendation pipeline
         """
         logger.info("Starting recommendation pipeline...")
         
         try:
-            recommendations = self.generate_recommendations(purchase_data)
+            loyal_customers = list(set(purchase_data['customer_id']))
+            recommendations = self.generate_recommendations(purchase_data, loyal_customers)
             
             if not recommendations:
                 logger.warning("No recommendations were generated.")
@@ -392,39 +394,6 @@ class GCPRecommendationSystem:
         except Exception as e:
             logger.error(f"Pipeline failed: {e}")
             raise
-
-def create_sample_data() -> tuple[pd.DataFrame, Dict[str, str]]:
-    """
-    Create sample purchase data and customer emails for testing
-    """
-    # Sample purchase data
-    sample_data = {
-        'customer_id': ['CUST001', 'CUST001', 'CUST001', 'CUST002', 'CUST002', 
-                       'CUST003', 'CUST003', 'CUST003', 'CUST003'],
-        'item_id': ['ITEM001', 'ITEM002', 'ITEM003', 'ITEM001', 'ITEM004',
-                   'ITEM002', 'ITEM005', 'ITEM006', 'ITEM007'],
-        'item_name': ['Wireless Headphones', 'Smartphone Case', 'Bluetooth Speaker',
-                     'Wireless Headphones', 'Laptop Stand', 'Smartphone Case',
-                     'Gaming Mouse', 'Mechanical Keyboard', 'Monitor Stand'],
-        'category': ['Electronics', 'Accessories', 'Audio', 'Electronics', 'Office',
-                    'Accessories', 'Gaming', 'Gaming', 'Office'],
-        'purchase_date': ['2024-01-15', '2024-02-20', '2024-03-10', '2024-01-25',
-                         '2024-03-05', '2024-02-14', '2024-03-20', '2024-04-01', '2024-04-15'],
-        'quantity': [1, 2, 1, 1, 1, 1, 1, 1, 1],
-        'price': [99.99, 24.99, 79.99, 99.99, 89.99, 24.99, 59.99, 129.99, 49.99]
-    }
-    
-    purchase_df = pd.DataFrame(sample_data)
-    purchase_df['purchase_date'] = pd.to_datetime(purchase_df['purchase_date'])
-    
-    # Sample customer emails
-    customer_emails = {
-        'CUST001': 'customer1@example.com',
-        'CUST002': 'customer2@example.com',
-        'CUST003': 'customer3@example.com'
-    }
-    
-    return purchase_df, customer_emails
 
 def setup_bigquery_table(project_id: str, dataset_id: str, table_id: str):
     """
@@ -486,7 +455,7 @@ def schedule_recommendations_with_cloud_functions():
     """
     pass
 
-def main():
+def recommend_personalized_products(merchant_id):
     """
     Main function to run the recommendation system
     """
@@ -495,7 +464,9 @@ def main():
         rec_system = GCPRecommendationSystem()
         
         # Create sample data (replace with your actual data loading)
-        purchase_data, customer_emails = create_sample_data()
+        purchase_data = get_loyal_users_order_history(merchant_id)
+        users_ids = list(set(purchase_data['customer_id']))
+        customer_emails = get_users_emails(users_ids)
         
         logger.info(f"Loaded {len(purchase_data)} purchase records for {purchase_data['customer_id'].nunique()} customers")
         
@@ -551,4 +522,4 @@ AND marketing_opt_in = true
 
 if __name__ == "__main__":
     # Example usage
-    main()
+    recommend_personalized_products(94025)
