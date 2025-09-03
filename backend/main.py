@@ -64,6 +64,7 @@ def create_scheduled_job(merchant_id: int, job_name: str, db: Session = Depends(
     job_id = f"{job_name}-{merchant_id}"
     status = schedule_job(job_id, url, schedule)
     if status:
+        job_name = job_name.lower().replace(' ','-')
         print(insert_active_promotion(db, merchant_id, job_name))
         return {"message": f"Cloud Scheduler job '{job_name}' created."}
     else:
