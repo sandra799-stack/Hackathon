@@ -13,7 +13,8 @@ google-cloud-scheduler
 alembic
 python-dotenv
 mysql-connector-python
-vertexai
-requests
-langchain
 langchain-google-vertexai
+langchain
+requests
+vertexai
+instabot

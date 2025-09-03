@@ -8,7 +8,12 @@ from crud import insert_active_promotion, delete_active_promotion, get_promotion
 from dotenv import load_dotenv
 from models import Base
 import schema
+from agents.weather_recommendation_agent import recommend_products_by_weather
+from agents.social_media_agent import post_products_to_instagram
+from agents.personalized_recommendation_agent import recommend_personalized_products
 from pydantic import BaseModel
+import json
+
 load_dotenv()
 
 app = FastAPI()
@@ -93,7 +98,7 @@ def happy_hour(merchant_id: int):
       body=email_body)
 
 @app.get("/promotions/birthday/{merchant_id}")
-def happy_hour(merchant_id: int):
+def birthday(merchant_id: int):
     """
     Endpoint to be called from the scheduler to apply birthday promotion
     """
@@ -113,6 +118,29 @@ def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)
     rows = get_promotions(db, merchant_id)
     return [dict(row._mapping) for row in rows]
 
+@app.get("/recommendations/weather/{merchant_id}")
+def weather_recommendation(merchant_id: int):
+    notification_message = recommend_products_by_weather(merchant_id)
+    notification_message = notification_message.strip("`\n ")
+    if notification_message.startswith("json"):
+        notification_message = notification_message[4:].strip()
+    notification_message = json.loads(notification_message)
+    emails = ['nhelmy@deloitte.com', 'ssadik@deloitte.com'] # relaced with the actual emails from db
+    for email in emails:
+      send_email(
+      to_email=email,
+      subject=notification_message['subject'],
+      body=notification_message['message'])
+
+@app.get("/recommendations/social-media/{merchant_id}")
+def post_to_instagram(merchant_id: int):
+    post_products_to_instagram(merchant_id)
+    return
+
+@app.get("/recommendations/personalized/{merchant_id}")
+def personalized_recommendation(merchant_id: int):
+    recommend_personalized_products(merchant_id)
+
 # just for testing
 @app.post("/send-email")
 def send_email_endpoint(request: EmailRequest):
@@ -121,7 +149,3 @@ def send_email_endpoint(request: EmailRequest):
         return {"status": "success", "message": "Email sent successfully"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
