@@ -125,7 +125,9 @@ def happy_hour(merchant_id: int):
     Endpoint to be called from the scheduler to apply happy-hour promotion
     """
     happy_hour = get_hour_with_least_orders(merchant_id)
-    emails = get_users_email_by_merchant_id(merchant_id)
+    # For Demo
+    # emails = get_users_email_by_merchant_id(merchant_id)
+    emails = ['nhelmy@deloitte.com']
     email_body = f"Exclusive Happy Hour! Get 20% off from {happy_hour}:00 to {happy_hour + 1}:00 today only! Enjoy your day!"
     # notify_users
     logging.info("Emails will be send")
@@ -141,14 +143,15 @@ def birthday(merchant_id: int):
     Endpoint to be called from the scheduler to apply birthday promotion
     """
     users = get_birthdays_last_month_by_merchant(merchant_id)
-    emails = get_users_email_by_merchant_id(merchant_id)
+    # For Demo
+    users.append({'first_name':'Nooran', 'email':'nhelmy@deloitte.com'})
     email_body = f"It’s your special day 🎉 Enjoy 1 free item from our hand-picked birthday selection!"
     # notify_users
     logging.info("Emails will be send")
-    for email in emails:
+    for user in users:
       send_email(
-      to_email=email,
-      subject="Birthday Promotion",
+      to_email=user['email'],
+      subject=f"Happy Birthday {user['first_name']}!",
       body=email_body)
         
 @app.get("/promotions/{merchant_id}", response_model=list[schema.PromotionWithStatus])
