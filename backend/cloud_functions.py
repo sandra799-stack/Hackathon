@@ -6,7 +6,6 @@ from fastapi import HTTPException
 from dotenv import load_dotenv
 import os, ssl, smtplib
 from email.message import EmailMessage
- 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -78,7 +77,7 @@ def delete_job(merchant_id: int, job_name: str):
         logging.error(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting job.")
     
-def send_email(to_email: str, subject: str, body: str) -> None:
+def send_email(to_email: str, subject: str, body: str , form_link: str | None = None) -> None:
     user = os.environ["GMAIL_USER"]
     app_pw = os.environ["GMAIL_APP_PASSWORD"]
 
@@ -86,8 +85,19 @@ def send_email(to_email: str, subject: str, body: str) -> None:
     msg["From"] = user
     msg["To"] = to_email
     msg["Subject"] = subject
-    msg.set_content(body)
-
+       # Always include plain text
+    msg.set_content(body if not form_link else f"{body}\n\n{form_link}")
+    if form_link:
+        html_body = f"""
+        <html>
+            <body>
+                <p>{body}</p>
+                <p><a href="{form_link}">Click here to fill out the form</a></p>
+            </body>
+        </html>
+        """
+        msg.add_alternative(html_body, subtype="html")
+        
     context = ssl.create_default_context()
     with smtplib.SMTP("smtp.gmail.com", 587) as s:
         s.starttls(context=context)
