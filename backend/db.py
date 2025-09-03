@@ -86,13 +86,11 @@ def get_birthdays_last_month_by_merchant(merchant_id: int, limit: int = 5):
     query = f"""
     SELECT 
         T1.`first_name`,
-        T1.`last_name`,
-        T1.`email_valid`,
-        T1.`email`,
-        T2.`place_id` AS merchant_id
+        T1.`email`
     FROM dim_users AS T1
     INNER JOIN dim_accounts AS T2 ON T1.`id` = T2.`user_id`
-    WHERE MONTH(FROM_UNIXTIME(T1.`date_of_birth`)) = MONTH(CURDATE() - INTERVAL 1 MONTH)
+    WHERE MONTH(FROM_UNIXTIME(T1.`date_of_birth`)) = MONTH(CURDATE())
+    AND DAY(FROM_UNIXTIME(T1.`date_of_birth`)) = DAY(CURDATE())
       AND T1.`date_of_birth` IS NOT NULL
       AND T1.`email_valid` = 1
       AND T2.`place_id` = {merchant_id}

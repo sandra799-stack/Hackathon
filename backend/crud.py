@@ -18,6 +18,8 @@ def get_promotions(db: Session , merchant_id: str):
 
 def clear_promotions(db: Session):
     """Delete all promotions from the table."""
+    db.query(ActivePromotion).delete()
+    db.commit()
     db.query(Promotion).delete()
     db.commit()
     db.close()

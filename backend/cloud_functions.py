@@ -6,12 +6,23 @@ from fastapi import HTTPException
 from dotenv import load_dotenv
 import os, ssl, smtplib
 from email.message import EmailMessage
+from datetime import datetime, timedelta, UTC
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION_ID = os.getenv("LOCATION_ID")
 KEY_PATH = os.getenv("KEY_PATH")
+
+def next_minute_cron():
+    # Get current UTC time (timezone-aware)
+    now = datetime.now(UTC)
+    # Add one minute, reset seconds and microseconds
+    next_min = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
+    
+    # Build cron expression (minute, hour, day, month, weekday)
+    cron_expr = f"{next_min.minute} {next_min.hour} {next_min.day} {next_min.month} *"
+    return cron_expr
 
 def schedule_job(job_name: str, target_url: str, cron_schedule: str):
     """
@@ -33,6 +44,9 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
         client = scheduler_v1.CloudSchedulerClient(credentials=credentials)
         parent = f"projects/{PROJECT_ID}/locations/{LOCATION_ID}"
 
+        # For demo only
+        cron_schedule = next_minute_cron()
+
         # Define the job details
         job = scheduler_v1.Job(
             name=f"{parent}/jobs/{job_name}",
@@ -41,7 +55,7 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
                     http_method=scheduler_v1.HttpMethod.GET
             ),
             schedule=cron_schedule,
-            time_zone="America/New_York",
+            time_zone="UTC",
         )
 
         logging.info(f"Attempting to create job: {job_name}...")

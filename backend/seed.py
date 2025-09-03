@@ -10,12 +10,12 @@ def run_seed(db):
 
     # Insert fresh data
     create_promotions_bulk(db, [
-            {"description": "Happy Hour", "promotion_name": "Happy Hour", "icon":"AnimatedClock"},
-            {"description": "Birthday", "promotion_name": "Birthday" , "icon":"AnimatedCake"},
-            {"description": "Social media posts", "promotion_name": "Social media posts" ,"icon":"AnimatedShare2"},
-            {"description": "Know your coustomer", "promotion_name": "Know your coustomer" ,"icon":"AnimatedUsers"},
-            {"description": "Recommend Items", "promotion_name": "Recommend Items" ,"icon":"AnimatedStar"},
-            {"description": "PromoCode depnding on the weather", "promotion_name": "PromoCode depnding on the weather","icon":"AnimatedCake"}
+            {"description": "Boost sales with limited-time discounts during happy hours.", "promotion_name": "Happy Hour", "icon":"AnimatedClock"},
+            {"description": "Celebrate your customers’ birthdays with special offers they’ll love.", "promotion_name": "Birthday" , "icon":"AnimatedCake"},
+            {"description": "Promote your store with eye-catching posts on social media.", "promotion_name": "Social Media Posts" ,"icon":"AnimatedShare2"},
+            {"description": "Send customers a quick form to learn more about them and personalize your offers.", "promotion_name": "Know Your Customer" ,"icon":"AnimatedUsers"},
+            {"description": "Recommend items based on customer order history", "promotion_name": "Personalized Recommendation" ,"icon":"AnimatedStar"},
+            {"description": "Share promo codes based on the weather to boost engagement.","promotion_name": "Weather Recommendation","icon": "AnimatedSunCloud"}
     ])
     print("✅ Promotions cleared and re-seeded")
 

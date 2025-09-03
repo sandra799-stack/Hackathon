@@ -1,0 +1,37 @@
+# ---- Build Stage ----
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies (only package.json + lock first for better caching)
+COPY package*.json ./
+RUN npm ci
+
+# Copy the rest of the source
+COPY . .
+
+# Build the Next.js app
+RUN npm run build
+
+# ---- Production Stage ----
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+# Don’t run as root (security best practice)
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Copy only necessary files from builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+
+# Make Next.js use non-root user
+USER nextjs
+
+EXPOSE 3000
+CMD ["npm", "run", "start"]
