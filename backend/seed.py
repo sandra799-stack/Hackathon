@@ -15,7 +15,7 @@ def run_seed(db):
             {"description": "Promote your store with eye-catching posts on social media.", "promotion_name": "Social Media Posts" ,"icon":"AnimatedShare2"},
             {"description": "Send customers a quick form to learn more about them and personalize your offers.", "promotion_name": "Know Your Customer" ,"icon":"AnimatedUsers"},
             {"description": "Recommend items based on customer order history", "promotion_name": "Personalized Recommendation" ,"icon":"AnimatedStar"},
-            {"description": "Share promo codes based on the weather to boost engagement.","promotion_name": "Weather Recommendation","icon": "SunCloud"}
+            {"description": "Share promo codes based on the weather to boost engagement.","promotion_name": "Weather Recommendation","icon": "AnimatedSunCloud"}
     ])
     print("✅ Promotions cleared and re-seeded")
 

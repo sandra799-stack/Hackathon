@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useEffect, useState } from "react";
-import { Search, Clock, Star, Users, Share2, Target, X } from "lucide-react";
+import { Search, Clock, Star, Users, Share2, Target, X ,CloudSun } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -183,6 +183,15 @@ const AnimatedTarget = () => (
   </div>
 );
 
+const AnimatedSunCloud = () => (
+  <div
+    className="w-8 h-8 relative animate-pulse"
+    style={{ animationDelay: "1s" }}
+  >
+    <CloudSun className="w-8 h-8" />
+  </div>
+);
+
 const getIconComponent = (iconName: string): React.ReactNode => {
   switch (iconName) {
     case "AnimatedCake":
@@ -197,6 +206,8 @@ const getIconComponent = (iconName: string): React.ReactNode => {
       return <AnimatedClock />;
     case "AnimatedTarget":
       return <AnimatedTarget />;
+    case "AnimatedSunCloud":
+      return <AnimatedSunCloud />;
     default:
       return <AnimatedStar />;
   }
@@ -472,8 +483,7 @@ export default function CouponsPage() {
               {activatedCoupons.map((coupon) => (
                 <Card
                   key={coupon.id}
-                  className="w-80 h-auto flex flex-col bg-muted border-2 border-accent shadow-md"
-                >
+                  className="h-auto flex flex-col bg-muted border-2 border-accent shadow-md">
                   <CardContent className="p-6 text-center">
                     <div className="text-accent mb-4 flex justify-center">
                       {getIconComponent(coupon.icon)}
