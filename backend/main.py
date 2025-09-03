@@ -36,6 +36,22 @@ endpoints = {
     "birthday": {
         "url": f"{API_BASE_URL}/promotions/birthday",
         "schedule": "0 0 * * *"
+    },
+    'know-your-customer': {
+        "url": f"{API_BASE_URL}/promotions/know-your-customer",
+        "schedule": "0 0 * * *" # Runs every day at midnight UTC
+    },
+    'weather-recommendation': {
+        "url": f"{API_BASE_URL}/recommendations/weather",
+        "schedule": "0 0 * * *" # Runs every day at midnight UTC
+    },
+    'social-media-posts': {
+        "url": f"{API_BASE_URL}/promotions/social-media",
+        "schedule": "0 0 * * *" # Runs every day at midnight UTC
+    },
+    'personalized-recommendation': {
+        "url": f"{API_BASE_URL}/promotions/personalized",
+        "schedule": "0 0 * * *" # Runs every day at midnight UTC
     }
 }
 class EmailRequest(BaseModel):
@@ -64,7 +80,7 @@ def create_scheduled_job(merchant_id: int, job_name: str, db: Session = Depends(
     job_id = f"{job_name}-{merchant_id}"
     status = schedule_job(job_id, url, schedule)
     if status:
-        job_name = job_name.lower().replace(' ','-')
+        job_name = job_name.replace('-',' ')
         print(insert_active_promotion(db, merchant_id, job_name))
         return {"message": f"Cloud Scheduler job '{job_name}' created."}
     else:
@@ -79,6 +95,7 @@ def delete_scheduled_job(merchant_id: str, job_name: str, db: Session = Depends(
         raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
     logging.info(f"Received request to delete job: {job_name} from merchant: {merchant_id}")
     delete_job(merchant_id, job_name)
+    job_name = job_name.replace('-',' ')
     delete_active_promotion(db, merchant_id, job_name)
     return {"message": f"Cloud Scheduler job '{job_name}' deleted."}
     
