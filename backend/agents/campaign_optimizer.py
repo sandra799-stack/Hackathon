@@ -267,7 +267,7 @@ class CampaignOptimizationAgent:
         self.campaign_controller = CampaignController()
         # Initialize Vertex AI LLM
         self.llm = ChatVertexAI(
-            model_name="gemini-2.5-pro",
+            model_name="gemini-1.5-pro",
             project=project_id,
             location=location,
             temperature=0.1

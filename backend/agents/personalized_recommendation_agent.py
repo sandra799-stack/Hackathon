@@ -68,7 +68,7 @@ class GCPRecommendationSystem:
         
         # Initialize LangChain with Gemini model
         self.llm = ChatVertexAI(
-            model_name="gemini-2.5-pro", 
+            model_name="gemini-1.5-pro", 
             temperature=0.3,
             max_output_tokens=2048,
             project=self.project_id,

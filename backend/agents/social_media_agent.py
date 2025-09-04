@@ -89,7 +89,7 @@ class ContentGenerator:
         
         # Initialize LangChain with Gemini
         self.llm = ChatVertexAI(
-            model_name="gemini-2.5-pro",
+            model_name="gemini-1.5-pro",
             project=project_id,
             location=location,
             temperature=0.3  # Lower temperature for more consistent JSON output
