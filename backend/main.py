@@ -76,7 +76,10 @@ def create_scheduled_job(merchant_id: int, job_name: str, db: Session = Depends(
     if job_name not in endpoints:
         raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
     logging.info(f"Received request to create job: {job_name} from merchant: {merchant_id}")
-    url = f"{endpoints[job_name]['url']}/{merchant_id}" 
+    if job_name == 'know-your-customer':
+        url = f"{endpoints[job_name]['url']}" 
+    else:
+        url = f"{endpoints[job_name]['url']}/{merchant_id}"  
     schedule = endpoints[job_name]['schedule']
     job_id = f"{job_name}-{merchant_id}"
     status = schedule_job(job_id, url, schedule)
