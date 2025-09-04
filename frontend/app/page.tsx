@@ -226,7 +226,7 @@ const getIconComponent = (iconName: string): React.ReactNode => {
 const fetchPromotions = async (merchantId: string): Promise<Coupon[]> => {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/promotions/${merchantId}`
+      `https://backend-313392552731.europe-west3.run.app/promotions/${merchantId}`
     );
     if (!response.ok) {
       throw new Error("Failed to fetch promotions");
@@ -245,7 +245,7 @@ const scheduleJob = async (
   try {
     const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/schedule-job/${merchantId}/${transformedName}`
+      `https://backend-313392552731.europe-west3.run.app/schedule-job/${merchantId}/${transformedName}`
     );
     if (!response.ok) {
       throw new Error("Failed to schedule job");
@@ -262,7 +262,7 @@ const deleteJob = async (
   try {
     const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/delete-job/${merchantId}/${transformedName}`
+      `https://backend-313392552731.europe-west3.run.app/delete-job/${merchantId}/${transformedName}`
     );
     if (!response.ok) {
       throw new Error("Failed to delete job");
