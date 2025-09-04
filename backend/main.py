@@ -11,6 +11,7 @@ import schema
 from agents.weather_recommendation_agent import recommend_products_by_weather
 from agents.social_media_agent import post_products_to_instagram
 from agents.personalized_recommendation_agent import recommend_personalized_products
+from agents.campaign_optimizer import campaign_optimizer
 from pydantic import BaseModel
 import json
 
@@ -181,6 +182,10 @@ def post_to_instagram(merchant_id: int):
 @app.get("/recommendations/personalized/{merchant_id}")
 def personalized_recommendation(merchant_id: int):
     recommend_personalized_products(merchant_id)
+
+@app.get("/recommendations/campaigns/{merchant_id}")
+def campaigns_recommendation(merchant_id: int):
+    campaign_optimizer(merchant_id)
 
 # just for testing
 @app.post("/send-email")
