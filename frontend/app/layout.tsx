@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   description:
     "Loving Loyality is a platform that helps you save money on your favorite products and services.",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" }
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
