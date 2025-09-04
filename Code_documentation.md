@@ -1,3 +1,317 @@
+# Campaign Optimizer AI Agent - Technical Documentation
+
+## Overview
+
+The Campaign Optimizer AI Agent is an intelligent system that analyzes sales data and provides data-driven recommendations for activating or deactivating marketing campaigns. It uses Google Cloud Platform services, LangChain framework, and Vertex AI to deliver automated campaign optimization decisions.
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Campaign Optimizer Agent                 │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────── │
+│  │ Sales Data      │  │ Campaign        │  │ LLM Agent      │
+│  │ Analyzer        │  │ Controller      │  │ (Vertex AI)    │
+│  └─────────────────┘  └─────────────────┘  └─────────────── │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────── │
+│  │ BigQuery        │  │ Campaign        │  │ LangChain      │
+│  │ Data Source     │  │ Scripts         │  │ Tools          │
+│  └─────────────────┘  └─────────────────┘  └─────────────── │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### 1. CampaignStatus (Data Class)
+
+Represents the status and metadata of a marketing campaign.
+
+**Attributes:**
+- `name` (str): Campaign identifier
+- `is_active` (bool): Current activation status
+- `last_activated` (datetime, optional): Timestamp of last activation
+- `performance_score` (float): Performance metric (0-100 scale)
+
+### 2. SalesDataAnalyzer
+
+Handles data retrieval and analysis from BigQuery.
+
+**Key Methods:**
+
+#### `__init__(project_id: str)`
+Initializes BigQuery client connection.
+
+#### `get_last_month_sales_data() -> pd.DataFrame`
+Retrieves 30 days of sales data with the following schema:
+- `date`: Transaction date
+- `hour`: Hour of transaction (0-23)
+- `product_id`: Product identifier
+- `customer_id`: Customer identifier
+- `revenue`: Transaction revenue
+- `campaign_source`: Attribution campaign
+- `weather_conditions`: Weather at time of purchase
+- `customer_birthday`: Birthday flag
+
+#### `analyze_campaign_performance(df: pd.DataFrame) -> Dict[str, float]`
+Calculates performance scores for each campaign as percentage of total revenue.
+
+#### `get_hourly_sales_pattern(df: pd.DataFrame) -> Dict[int, float]`
+Analyzes revenue distribution across hours (0-23).
+
+#### `get_weather_impact(df: pd.DataFrame) -> Dict[str, float]`
+Calculates average revenue by weather condition.
+
+### 3. CampaignController
+
+Manages campaign lifecycle operations.
+
+**Supported Campaigns:**
+- `birthday_campaign`: Birthday discount automation
+- `happy_hour_campaign`: Time-based discount activation
+- `weather_recommendation_agent`: Weather-based product suggestions
+- `social_media_agent`: Social media posting automation
+- `personalised_recommendation_agent`: Personalized product recommendations
+
+**Key Methods:**
+
+#### `get_campaign_status(campaign_name: str = None) -> Dict`
+Returns status information for specified campaign or all campaigns.
+
+#### `activate_campaign(campaign_name: str) -> Dict`
+Executes campaign activation script with `--activate` flag.
+
+#### `deactivate_campaign(campaign_name: str) -> Dict`
+Executes campaign deactivation script with `--deactivate` flag.
+
+### 4. CampaignOptimizationAgent
+
+The main AI agent orchestrating the optimization process.
+
+**Key Methods:**
+
+#### `__init__(project_id: str, location: str = "us-central1")`
+Initializes the agent with Vertex AI LLM and creates LangChain tools.
+
+#### `_create_tools() -> List[Tool]`
+Creates three LangChain tools:
+1. **get_sales_data**: Comprehensive sales analysis
+2. **get_campaign_status**: Campaign status inquiry
+3. **get_current_context**: Time and environmental context
+
+#### `get_recommendation() -> str`
+Generates AI-powered campaign optimization recommendations using the agent executor.
+
+#### `implement_recommendation(recommendation: str, approved: bool) -> Dict`
+Parses and executes approved recommendations by calling campaign activation/deactivation methods.
+
+## Dependencies
+
+### Required Python Packages
+```python
+os, json, pandas, datetime, typing, dataclasses
+google.cloud.bigquery
+logging
+langchain_google_vertexai
+langchain.tools, langchain.agents, langchain.prompts, langchain.schema
+dotenv
+subprocess, sys
+```
+
+### Environment Variables
+```bash
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_LOCATION=us-central1  # Optional, defaults to us-central1
+```
+
+## Installation
+
+1. **Install Dependencies:**
+```bash
+pip install google-cloud-bigquery pandas python-dotenv
+pip install langchain langchain-google-vertexai
+```
+
+2. **Set up Google Cloud Authentication:**
+```bash
+gcloud auth application-default login
+# or set GOOGLE_APPLICATION_CREDENTIALS environment variable
+```
+
+3. **Configure Environment:**
+Create `.env` file with required variables.
+
+4. **Campaign Scripts:**
+Ensure campaign scripts exist in `campaigns/` directory:
+```
+campaigns/
+├── birthday_campaign.py
+├── happy_hour_campaign.py
+├── weather_recommendation_agent.py
+├── social_media_agent.py
+└── personalised_recommendation_agent.py
+```
+
+## Database Schema
+
+### BigQuery Table: `{project_id}.sales.transactions`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| order_date | TIMESTAMP | Transaction timestamp |
+| product_id | STRING | Product identifier |
+| customer_id | STRING | Customer identifier |
+| revenue | FLOAT | Transaction amount |
+| campaign_source | STRING | Attribution campaign |
+| weather_conditions | STRING | Weather conditions |
+| customer_birthday | BOOLEAN | Birthday flag |
+
+## Usage Examples
+
+### Basic Usage
+```python
+from campaign_optimizer import CampaignOptimizationAgent
+
+# Initialize agent
+agent = CampaignOptimizationAgent(
+    project_id="your-project-id",
+    location="us-central1"
+)
+
+# Get recommendation
+recommendation = agent.get_recommendation()
+print(recommendation)
+
+# Implement recommendation (with approval)
+result = agent.implement_recommendation(recommendation, approved=True)
+```
+
+### Analyzing Sales Data Only
+```python
+from campaign_optimizer import SalesDataAnalyzer
+
+analyzer = SalesDataAnalyzer("your-project-id")
+df = analyzer.get_last_month_sales_data()
+performance = analyzer.analyze_campaign_performance(df)
+```
+
+### Campaign Control Only
+```python
+from campaign_optimizer import CampaignController
+
+controller = CampaignController()
+status = controller.get_campaign_status()
+result = controller.activate_campaign("birthday_campaign")
+```
+
+## AI Agent Behavior
+
+### System Prompt Guidelines
+The AI agent follows these principles:
+- **Data-driven decisions**: Based on performance metrics
+- **Context awareness**: Considers time, season, and patterns
+- **ROI optimization**: Maximizes return on investment
+- **Customer experience**: Avoids campaign overload
+- **Clear reasoning**: Provides transparent explanations
+
+### Recommendation Format
+```
+**RECOMMENDATION:**
+- Action: [Activate/Deactivate] [campaign_name(s)]
+- Timing: [When to implement]
+- Reasoning: [Data-based explanation]
+- Expected Impact: [Predicted outcome]
+```
+
+## Error Handling
+
+### Common Error Scenarios
+1. **BigQuery Connection Issues**: Falls back to sample data generation
+2. **Campaign Script Failures**: Returns detailed error messages
+3. **LLM API Errors**: Provides graceful error responses
+4. **Timeout Handling**: 30-second timeout for campaign operations
+
+### Logging
+The system uses Python's logging module with INFO level default. Key events logged:
+- Data retrieval operations
+- Campaign activation/deactivation
+- Error conditions
+- Performance metrics
+
+## Performance Considerations
+
+### Optimization Strategies
+- **Data Caching**: Consider implementing caching for repeated queries
+- **Async Operations**: Campaign operations run synchronously but could benefit from async execution
+- **Memory Management**: Large datasets may require chunked processing
+- **Rate Limiting**: Vertex AI calls should respect API quotas
+
+### Scalability Notes
+- BigQuery handles large-scale data efficiently
+- Campaign scripts should be lightweight and fast
+- Consider implementing queue-based processing for multiple campaigns
+
+## Security Considerations
+
+### Data Protection
+- Uses Google Cloud IAM for BigQuery access
+- Environment variables for sensitive configuration
+- No hardcoded credentials in source code
+
+### Campaign Execution
+- Subprocess execution with timeout protection
+- Error output capture and logging
+- Restricted to predefined campaign scripts
+
+## Monitoring and Maintenance
+
+### Key Metrics to Monitor
+- Campaign activation success rate
+- Data retrieval performance
+- LLM response times and costs
+- Campaign performance trends
+
+### Regular Maintenance Tasks
+- Update sample data generation logic
+- Review and optimize BigQuery queries
+- Monitor Vertex AI costs and usage
+- Update campaign scripts and dependencies
+
+## Troubleshooting
+
+### Common Issues
+
+**1. "GCP_PROJECT_ID not found"**
+- Solution: Set environment variable or create `.env` file
+
+**2. "Campaign script not found"**
+- Solution: Ensure all campaign scripts exist in `campaigns/` directory
+
+**3. "BigQuery permission denied"**
+- Solution: Verify BigQuery access permissions and authentication
+
+**4. "Vertex AI initialization failed"**
+- Solution: Check project ID, location, and API enablement
+
+## Future Enhancements
+
+### Potential Improvements
+1. **Real-time Data Processing**: Stream processing for immediate insights
+2. **A/B Testing Integration**: Automated campaign testing and optimization
+3. **Advanced ML Models**: Custom models for campaign performance prediction
+4. **Dashboard Integration**: Web interface for monitoring and control
+5. **Multi-channel Support**: Email, SMS, push notification campaigns
+6. **Advanced Scheduling**: Cron-like scheduling for automated recommendations
+
+## Contributing
+
+### Development Guidelines
+1. Follow existing code structure and naming conventions
+2. Add comprehensive logging for new features
+3. Include error handling for external service calls
+4. Update documentation for any API changes
+5. Test with sample data before production deployment
 
 # Weather-Based Product Recommendation System Documentation
 
