@@ -40,9 +40,9 @@ export function FloatingButton({
 
     try {
       const merchantId = localStorage.getItem("user_id");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/recommendations/campaigns/${merchantId}`
-      );
+      // Use the Next.js API route as a proxy
+      const response = await fetch(`/api/recommendations/campaigns/${merchantId}`);
+
 
       if (!response.ok) {
         throw new Error("Failed to get recommendations");

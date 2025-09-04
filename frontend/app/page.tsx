@@ -225,9 +225,12 @@ const getIconComponent = (iconName: string): React.ReactNode => {
 
 const fetchPromotions = async (merchantId: string): Promise<Coupon[]> => {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/promotions/${merchantId}`
-    );
+    // Use the Next.js API route as a proxy
+    const response = await fetch(`/api/promotions/${merchantId}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       throw new Error("Failed to fetch promotions");
     }
@@ -244,9 +247,12 @@ const scheduleJob = async (
 ): Promise<void> => {
   try {
     const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/schedule-job/${merchantId}/${transformedName}`
-    );
+    // Use the Next.js API route as a proxy
+    const response = await fetch(`/api/schedule-job/${merchantId}/${transformedName}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       throw new Error("Failed to schedule job");
     }
@@ -261,9 +267,12 @@ const deleteJob = async (
 ): Promise<void> => {
   try {
     const transformedName = promotionName.toLowerCase().replace(/\s+/g, "-");
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/delete-job/${merchantId}/${transformedName}`
-    );
+    // Use the Next.js API route as a proxy
+    const response = await fetch(`/api/delete-job/${merchantId}/${transformedName}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     if (!response.ok) {
       throw new Error("Failed to delete job");
     }
@@ -563,7 +572,11 @@ export default function CouponsPage() {
                     setLoading(true);
                     setError(null);
                     fetchPromotions(user_id)
-                      .then(setCoupons)
+                      .then((promotions) => {
+                        setCoupons(promotions);
+                        const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+                        setActivatedCoupons(activeCoupons);
+                      })
                       .catch(() => setError("Failed to load promotions"))
                       .finally(() => setLoading(false));
                   }
@@ -638,7 +651,9 @@ export default function CouponsPage() {
             const merchantId = localStorage.getItem("user_id") || "1";
             const promotions = await fetchPromotions(merchantId);
             setCoupons(promotions);
-            const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+            const activeCoupons = promotions.filter(
+              (coupon) => coupon.is_active
+            );
             setActivatedCoupons(activeCoupons);
           } catch (error) {
             console.error("Error refreshing promotions:", error);
