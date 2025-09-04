@@ -54,14 +54,12 @@ class WeatherProductRecommender:
         """
         # Load environment variables
         load_dotenv()
-        KEY_PATH = os.getenv("KEY_PATH")
         
         self.project_id = project_id
         self.location = location
         self.debug = debug
         
         # Initialize Vertex AI
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         vertexai.init(project=project_id, location=location)
         
         # Initialize LangChain with Gemini
@@ -70,7 +68,6 @@ class WeatherProductRecommender:
             project=project_id,
             location=location,
             temperature=0.3,  # Lower temperature for more consistent JSON output
-            credentials=credentials
         )
     
     def get_weather_data(self, city: str) -> WeatherData:
@@ -383,7 +380,7 @@ def validate_environment():
     """
     load_dotenv()
     
-    required_env_vars = ["KEY_PATH", "OPENWEATHER_API_KEY", "PROJECT_ID"]
+    required_env_vars = ["OPENWEATHER_API_KEY", "PROJECT_ID"]
     missing_vars = [var for var in required_env_vars if not os.getenv(var)]
     
     if missing_vars:

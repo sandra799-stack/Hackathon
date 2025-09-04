@@ -84,18 +84,15 @@ class ContentGenerator:
         
         self.project_id = project_id
         self.location = location
-        KEY_PATH = os.getenv("KEY_PATH")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         # Initialize Vertex AI
-        vertexai.init(project=project_id, location=location)
+        vertexai.init(project=project_id)
         
         # Initialize LangChain with Gemini
         self.llm = ChatVertexAI(
             model_name="gemini-2.5-pro",
             project=project_id,
             location=location,
-            temperature=0.3,  # Lower temperature for more consistent JSON output
-            credentials=credentials
+            temperature=0.3  # Lower temperature for more consistent JSON output
         )
     
     def generate_best_selling_post(self, product: Product, platform: str) -> SocialMediaPost:

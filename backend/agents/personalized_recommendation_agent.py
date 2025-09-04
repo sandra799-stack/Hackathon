@@ -63,8 +63,6 @@ class GCPRecommendationSystem:
             raise ValueError("GCP_PROJECT_ID must be set in .env file or passed as parameter")
         
         # Initialize GCP clients
-        KEY_PATH = os.getenv("KEY_PATH")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         # Initialize Vertex AI
         vertexai.init(project=self.project_id, location=self.region)
         
@@ -74,8 +72,7 @@ class GCPRecommendationSystem:
             temperature=0.3,
             max_output_tokens=2048,
             project=self.project_id,
-            location=self.region,
-            credentials=credentials
+            location=self.region
         )
     
     def analyze_purchase_history(self, purchase_data: pd.DataFrame) -> Dict[str, Any]:

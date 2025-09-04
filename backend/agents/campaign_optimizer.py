@@ -81,9 +81,7 @@ class SalesDataAnalyzer:
     """Analyzes sales data to provide insights for campaign optimization"""
     
     def __init__(self, project_id: str):
-        KEY_PATH = os.getenv("KEY_PATH")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
-        self.client = bigquery.Client(project=project_id, credentials=credentials)
+        self.client = bigquery.Client(project=project_id)
         
     def get_last_month_sales_data(self) -> pd.DataFrame:
         """Retrieve sales data from the last month"""
@@ -263,8 +261,6 @@ class CampaignOptimizationAgent:
     """LLM-based agent for campaign optimization"""
     
     def __init__(self, project_id: str, location: str = "us-central1"):
-        KEY_PATH = os.getenv("KEY_PATH")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         self.project_id = project_id
         self.location = location
         self.sales_analyzer = SalesDataAnalyzer(project_id)
@@ -274,8 +270,7 @@ class CampaignOptimizationAgent:
             model_name="gemini-2.5-pro",
             project=project_id,
             location=location,
-            temperature=0.1,
-            credentials=credentials
+            temperature=0.1
         )
         
         # Create tools for the agent
