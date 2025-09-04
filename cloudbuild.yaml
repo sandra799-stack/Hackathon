@@ -11,7 +11,7 @@ steps:
       [
         'build',
         '-t',
-        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}',
         '-f',
         'backend/dockerfile',
         'backend'
@@ -22,23 +22,23 @@ steps:
     args:
       [
         'push',
-        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}'
       ]
 
-  # Step 3: Deploy Cloud Run service in europe-west1
+  # Step 3: Deploy Cloud Run service in europe-west3
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       [
-        'run', 'deploy', 'backend',  # Cloud Run service name
-        '--image', 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
+        'run', 'deploy', 'backend',
+        '--image', 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}',
         '--region', 'europe-west3',
         '--platform', 'managed',
         '--allow-unauthenticated',
-        '--port', '8000',   # matches EXPOSE 8080 in dockerfile
+        '--port', '8000',
         '--memory', '4Gi',
         '--cpu', '2',
-        '--service-account', '560118820546-compute@developer.gserviceaccount.com'
+        '--service-account', '31392552731-compute@developer.gserviceaccount.com'
       ]
 #######################################################################################      
   # Step 4: Build Docker image for frontend
@@ -47,7 +47,7 @@ steps:
       [
         'build',
         '-t',
-        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}',
         '-f',
         'frontend/dockerfile',
         'frontend'
@@ -58,7 +58,7 @@ steps:
     args:
       [
         'push',
-        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}'
       ]
 
   # Step 6: Deploy frontend to Cloud Run
@@ -67,17 +67,17 @@ steps:
     args:
       [
         'run', 'deploy', 'frontend',
-        '--image', 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
+        '--image', 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}',
         '--region', 'europe-west3',
         '--platform', 'managed',
         '--allow-unauthenticated',
         '--port', '80',
         '--memory', '4Gi',
         '--cpu', '4',
-        '--service-account', '560118820546-compute@developer.gserviceaccount.com'
+        '--service-account', '31392552731-compute@developer.gserviceaccount.com'
       ]
 
 # Register images in Cloud Build metadata
 images:
-  - 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
-  - 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
+  - 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}'
+  - 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}'
