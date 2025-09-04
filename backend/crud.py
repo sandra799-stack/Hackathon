@@ -53,3 +53,12 @@ def delete_active_promotion(db: Session, merchant_id: str, promotion_name: str):
     db.delete(active_promo)
     db.commit()
     return
+
+def is_promotion_active(db: Session, merchant_id, promotion_name):
+    promotions = get_promotions(db, merchant_id)
+    for promotion in promotions:
+        if promotion[2].lower() == promotion_name and promotion[4] == True:
+            return True
+        else:
+            return False
+        
