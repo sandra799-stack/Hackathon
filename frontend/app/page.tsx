@@ -3,11 +3,21 @@
 import type React from "react";
 
 import { useEffect, useState } from "react";
-import { Search, Clock, Star, Users, Share2, Target, X ,CloudSun } from "lucide-react";
+import {
+  Search,
+  Clock,
+  Star,
+  Users,
+  Share2,
+  Target,
+  X,
+  CloudSun,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { FloatingButton } from "@/components/ui/floating-button";
 
 interface Coupon {
   id: number;
@@ -483,7 +493,8 @@ export default function CouponsPage() {
               {activatedCoupons.map((coupon) => (
                 <Card
                   key={coupon.id}
-                  className="h-auto flex flex-col bg-muted border-2 border-accent shadow-md">
+                  className="h-auto flex flex-col bg-muted border-2 border-accent shadow-md"
+                >
                   <CardContent className="p-6 text-center">
                     <div className="text-accent mb-4 flex justify-center">
                       {getIconComponent(coupon.icon)}
@@ -617,6 +628,22 @@ export default function CouponsPage() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onLogin={handleLogin}
+      />
+
+      <FloatingButton
+        isLoggedIn={isLoggedIn}
+        setShowLoginModal={setShowLoginModal}
+        onSuccess={async () => {
+          try {
+            const merchantId = localStorage.getItem("user_id") || "1";
+            const promotions = await fetchPromotions(merchantId);
+            setCoupons(promotions);
+            const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+            setActivatedCoupons(activeCoupons);
+          } catch (error) {
+            console.error("Error refreshing promotions:", error);
+          }
+        }}
       />
     </div>
   );
