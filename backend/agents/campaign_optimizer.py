@@ -203,7 +203,7 @@ class CampaignController:
             #
             db_instance = get_db()
             job_name = campaigns_map[campaign_name]
-            if is_promotion_active(db_instance, str(merchant_id), job_name.replace('-',' ')):
+            if not is_promotion_active(db_instance, str(merchant_id), job_name.replace('-',' ')):
                 target_url = f"{endpoints[job_name]['url']}/{merchant_id}" 
                 cron = endpoints[job_name]['schedule']
                 job_id = f"{job_name}-{merchant_id}"

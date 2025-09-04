@@ -59,6 +59,5 @@ def is_promotion_active(db: Session, merchant_id, promotion_name):
     for promotion in promotions:
         if promotion[2].lower() == promotion_name and promotion[4] == True:
             return True
-        else:
-            return False
+    return False
         

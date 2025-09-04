@@ -22,7 +22,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001", "http://localhost:3000"],  # Frontend URLs
+    allow_origins=["https://frontend-313392552731.europe-west3.run.app"],  # Frontend URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,7 +112,7 @@ def know_your_customer():
     logging.info("Emails will be send")
     try:
          send_email(
-         "ssadik@deloitte.com",
+         "nhelmy@deloitte.com",
          "Tell Us a Little About Yourself!",
           body = email_body,
           form_link="https://forms.gle/dBwmSPf4vPuoYxMG7")

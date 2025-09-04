@@ -1,0 +1,83 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _TAG_SUFFIX: '${SHORT_SHA}-${BUILD_ID}'  # Unique tag per build
+
+steps:
+  # Step 1: Build Docker image for backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}',
+        '-f',
+        'backend/dockerfile',
+        'backend'
+      ]
+      
+  # Step 2: Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}'
+      ]
+
+  # Step 3: Deploy Cloud Run service in europe-west3
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'backend',
+        '--image', 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}',
+        '--region', 'europe-west3',
+        '--platform', 'managed',
+        '--allow-unauthenticated',
+        '--port', '8000',
+        '--memory', '4Gi',
+        '--cpu', '2',
+        '--service-account', '313392552731-compute@developer.gserviceaccount.com'
+      ]
+#######################################################################################      
+  # Step 4: Build Docker image for frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}',
+        '-f',
+        'frontend/dockerfile',
+        'frontend'
+      ]
+
+  # Step 5: Push frontend image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}'
+      ]
+
+  # Step 6: Deploy frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'frontend',
+        '--image', 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}',
+        '--region', 'europe-west3',
+        '--platform', 'managed',
+        '--allow-unauthenticated',
+        '--port', '80',
+        '--memory', '4Gi',
+        '--cpu', '4',
+        '--service-account', '313392552731-compute@developer.gserviceaccount.com'
+      ]
+
+# Register images in Cloud Build metadata
+images:
+  - 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/backend:${_TAG_SUFFIX}'
+  - 'europe-west3-docker.pkg.dev/steady-thunder-471118-e1/hackathon/frontend:${_TAG_SUFFIX}'
