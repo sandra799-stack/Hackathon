@@ -631,11 +631,18 @@ export default function CouponsPage() {
       />
 
       <FloatingButton
-        onClick={() => {
-          toast({
-            title: "Promotions activated",
-            description: "Your promotions have been activated successfully!",
-          });
+        isLoggedIn={isLoggedIn}
+        setShowLoginModal={setShowLoginModal}
+        onSuccess={async () => {
+          try {
+            const merchantId = localStorage.getItem("user_id") || "1";
+            const promotions = await fetchPromotions(merchantId);
+            setCoupons(promotions);
+            const activeCoupons = promotions.filter((coupon) => coupon.is_active);
+            setActivatedCoupons(activeCoupons);
+          } catch (error) {
+            console.error("Error refreshing promotions:", error);
+          }
         }}
       />
     </div>

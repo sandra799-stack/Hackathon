@@ -4,34 +4,71 @@ import * as React from "react";
 import { Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FloatingButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   onClick?: () => void;
+  onSuccess?: () => void;
+  isLoggedIn?: boolean;
+  setShowLoginModal?: (show: boolean) => void;
 }
 
 export function FloatingButton({
   className,
   onClick,
+  onSuccess,
+  isLoggedIn = false,
+  setShowLoginModal,
   ...props
 }: FloatingButtonProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    if (!isLoggedIn) {
+      if (setShowLoginModal) {
+        setShowLoginModal(true);
+      }
+      return;
+    }
+
     setIsProcessing(true);
 
-    setTimeout(() => {
+    try {
+      const merchantId = localStorage.getItem("user_id");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/recommendations/campaigns/${merchantId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get recommendations");
+      }
+
       setIsProcessing(false);
       toast({
-        title: "AI Agent",
-        description: "Your request has been processed successfully!",
+        title: "Promotions activated",
+        description: "Your promotions have been activated successfully!",
       });
 
       if (onClick) {
         onClick();
       }
-    }, 1500);
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "Failed to activate promotions. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -55,7 +92,10 @@ export function FloatingButton({
           )}
         </div>
       </TooltipTrigger>
-      <TooltipContent side="left" className="bg-primary/90 text-primary-foreground text-sm p-2">
+      <TooltipContent
+        side="left"
+        className="bg-primary/90 text-primary-foreground text-sm p-2"
+      >
         Automatically activate promotions based on your sales history
       </TooltipContent>
     </Tooltip>
