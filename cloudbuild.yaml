@@ -11,7 +11,7 @@ steps:
       [
         'build',
         '-t',
-        'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
+        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
         '-f',
         'backend/dockerfile',
         'backend'
@@ -22,7 +22,7 @@ steps:
     args:
       [
         'push',
-        'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
+        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
       ]
 
   # Step 3: Deploy Cloud Run service in europe-west1
@@ -31,8 +31,8 @@ steps:
     args:
       [
         'run', 'deploy', 'backend',  # Cloud Run service name
-        '--image', 'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
-        '--region', 'europe-west1',
+        '--image', 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}',
+        '--region', 'europe-west3',
         '--platform', 'managed',
         '--allow-unauthenticated',
         '--port', '8000',   # matches EXPOSE 8080 in dockerfile
@@ -47,7 +47,7 @@ steps:
       [
         'build',
         '-t',
-        'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
+        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
         '-f',
         'frontend/dockerfile',
         'frontend'
@@ -58,7 +58,7 @@ steps:
     args:
       [
         'push',
-        'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
+        'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
       ]
 
   # Step 6: Deploy frontend to Cloud Run
@@ -67,8 +67,8 @@ steps:
     args:
       [
         'run', 'deploy', 'frontend',
-        '--image', 'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
-        '--region', 'europe-west1',
+        '--image', 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}',
+        '--region', 'europe-west3',
         '--platform', 'managed',
         '--allow-unauthenticated',
         '--port', '80',
@@ -79,5 +79,5 @@ steps:
 
 # Register images in Cloud Build metadata
 images:
-  - 'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
-  - 'europe-west1-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
+  - 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/backend:${_TAG_SUFFIX}'
+  - 'europe-west3-docker.pkg.dev/nse-gcp-ema-tt-e793c-sbx-1/hackathon/frontend:${_TAG_SUFFIX}'
