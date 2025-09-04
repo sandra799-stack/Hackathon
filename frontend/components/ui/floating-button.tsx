@@ -41,7 +41,7 @@ export function FloatingButton({
     try {
       const merchantId = localStorage.getItem("user_id");
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/recommendations/campaigns/${merchantId}`
+        `https://backend-313392552731.europe-west3.run.app/recommendations/campaigns/${merchantId}`
       );
 
       if (!response.ok) {
