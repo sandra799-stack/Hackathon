@@ -74,7 +74,7 @@ def create_scheduled_job(merchant_id: int, job_name: str, db: Session = Depends(
     Endpoint to create a new Cloud Scheduler job.
     """
     # Specefic merchant_id for the demo
-    merchant_id = 94025
+    merchant_id = str(94025)
     if job_name not in endpoints:
         raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
     logging.info(f"Received request to create job: {job_name} from merchant: {merchant_id}")
@@ -98,7 +98,7 @@ def delete_scheduled_job(merchant_id: str, job_name: str, db: Session = Depends(
     Endpoint to delete a cloud Scheduled job.
     """
     # Specefic merchant_id for the demo
-    merchant_id = 94025
+    merchant_id = str(94025)
     if job_name not in endpoints:
         raise HTTPException(status_code=404, detail=f"Promotion '{job_name}' not found.")
     logging.info(f"Received request to delete job: {job_name} from merchant: {merchant_id}")
@@ -133,7 +133,7 @@ def happy_hour(merchant_id: int):
     Endpoint to be called from the scheduler to apply happy-hour promotion
     """
     # Specefic merchant_id for the demo
-    merchant_id = 94025
+    merchant_id = str(94025)
     happy_hour = get_hour_with_least_orders(merchant_id)
     # For Demo
     # emails = get_users_email_by_merchant_id(merchant_id)
@@ -153,7 +153,7 @@ def birthday(merchant_id: int):
     Endpoint to be called from the scheduler to apply birthday promotion
     """
     # Specefic merchant_id for the demo
-    merchant_id = 94025
+    merchant_id = str(94025)
     users = get_birthdays_last_month_by_merchant(merchant_id)
     # For Demo
     users.append({'first_name':'Nooran', 'email':'nhelmy@deloitte.com'})
@@ -169,7 +169,7 @@ def birthday(merchant_id: int):
 @app.get("/promotions/{merchant_id}", response_model=list[schema.PromotionWithStatus])
 def read_promotions_for_merchant(merchant_id: str, db: Session = Depends(get_db)):
     # Specefic merchant_id for the demo
-    merchant_id = 94025
+    merchant_id = str(94025)
     rows = get_promotions(db, merchant_id)
     return [dict(row._mapping) for row in rows]
 
