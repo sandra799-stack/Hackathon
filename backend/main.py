@@ -47,11 +47,11 @@ endpoints = {
         "schedule": "0 0 * * *" # Runs every day at midnight UTC
     },
     'social-media-posts': {
-        "url": f"{API_BASE_URL}/promotions/social-media",
+        "url": f"{API_BASE_URL}/recommendations/social-media",
         "schedule": "0 0 * * *" # Runs every day at midnight UTC
     },
     'personalized-recommendation': {
-        "url": f"{API_BASE_URL}/promotions/personalized",
+        "url": f"{API_BASE_URL}/recommendations/personalized",
         "schedule": "0 0 * * *" # Runs every day at midnight UTC
     }
 }
