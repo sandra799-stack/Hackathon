@@ -12,7 +12,6 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION_ID = os.getenv("LOCATION_ID")
-KEY_PATH = os.getenv("KEY_PATH")
 SERVICE_ACCOUNT_EMAIL = os.getenv("SERVICE_ACCOUNT_EMAIL")
 
 def next_minute_cron():
@@ -39,11 +38,10 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
     # saved by `gcloud auth application-default login`.
     try:
         logging.info("Loading Application Default Credentials...")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         logging.info(f"Credentials loaded successfully")
 
         # Create a client with the loaded credentials
-        client = scheduler_v1.CloudSchedulerClient(credentials=credentials)
+        client = scheduler_v1.CloudSchedulerClient()
         parent = f"projects/{PROJECT_ID}/locations/{LOCATION_ID}"
 
         # For demo only
@@ -82,10 +80,9 @@ def delete_job(merchant_id: int, job_name: str):
     """
     try:
         logging.info("Loading Application Default Credentials...")
-        credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
         print(f"Credentials loaded successfully")
 
-        client = scheduler_v1.CloudSchedulerClient(credentials=credentials)
+        client = scheduler_v1.CloudSchedulerClient()
         job_name = f"projects/{PROJECT_ID}/locations/{LOCATION_ID}/jobs/{job_name}-{merchant_id}"
         
         logging.info(f"Attempting to delete job: {job_name}...")
