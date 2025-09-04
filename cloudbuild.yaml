@@ -38,7 +38,7 @@ steps:
         '--port', '8000',
         '--memory', '4Gi',
         '--cpu', '2',
-        '--service-account', '31392552731-compute@developer.gserviceaccount.com'
+        '--service-account', '313392552731-compute@developer.gserviceaccount.com'
       ]
 #######################################################################################      
   # Step 4: Build Docker image for frontend
@@ -74,7 +74,7 @@ steps:
         '--port', '80',
         '--memory', '4Gi',
         '--cpu', '4',
-        '--service-account', '31392552731-compute@developer.gserviceaccount.com'
+        '--service-account', '313392552731-compute@developer.gserviceaccount.com'
       ]
 
 # Register images in Cloud Build metadata
