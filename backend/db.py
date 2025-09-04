@@ -26,11 +26,12 @@ def run_sql(query: str):
     return rows
 
 def get_hour_with_least_orders(merchant_id):
+    # interval will be adjusted according to the data
     query = f"""
         SELECT HOUR(FROM_UNIXTIME(created)) AS order_hour,
         COUNT(*) AS order_count
         FROM fct_orders
-        WHERE place_id = {merchant_id} AND created >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY))
+        WHERE place_id = {merchant_id} AND created >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1000 DAY))
         group by order_hour
         order by order_count ASC
         limit 1
@@ -42,7 +43,7 @@ def get_hour_with_least_orders(merchant_id):
             password=DB_PASS,
             database=DB_NAME
         )
-
+    happy_hour = 3 # default value
     cursor = conn.cursor()
     if cursor is None:
         return
