@@ -112,7 +112,7 @@ def know_your_customer():
     logging.info("Emails will be send")
     try:
          send_email(
-         "ssadik@deloitte.com",
+         "nhelmy@deloitte.com",
          "Tell Us a Little About Yourself!",
           body = email_body,
           form_link="https://forms.gle/dBwmSPf4vPuoYxMG7")
