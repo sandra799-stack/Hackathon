@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 PROJECT_ID = os.getenv("PROJECT_ID")
 LOCATION_ID = os.getenv("LOCATION_ID")
 KEY_PATH = os.getenv("KEY_PATH")
+SERVICE_ACCOUNT_EMAIL = os.getenv("SERVICE_ACCOUNT_EMAIL")
 
 def next_minute_cron():
     # Get current UTC time (timezone-aware)
@@ -21,8 +22,9 @@ def next_minute_cron():
     next_min = (now + timedelta(minutes=1)).replace(second=0, microsecond=0)
     
     # Build cron expression (minute, hour, day, month, weekday)
-    cron_expr = f"{next_min.minute} {next_min.hour} {next_min.day} {next_min.month} *"
-    return cron_expr
+    # cron_expr = f"{next_min.minute} {next_min.hour} {next_min.day} {next_min.month} *"
+    cron_schedule = f"{next_min.minute} {next_min.hour} * * *"
+    return cron_schedule
 
 def schedule_job(job_name: str, target_url: str, cron_schedule: str):
     """
@@ -46,13 +48,18 @@ def schedule_job(job_name: str, target_url: str, cron_schedule: str):
 
         # For demo only
         cron_schedule = next_minute_cron()
+        logging.info(f"cron_schedule: {cron_schedule}")
 
         # Define the job details
         job = scheduler_v1.Job(
             name=f"{parent}/jobs/{job_name}",
             http_target=scheduler_v1.HttpTarget(
                     uri=target_url,
-                    http_method=scheduler_v1.HttpMethod.GET
+                    http_method=scheduler_v1.HttpMethod.GET,
+                    oidc_token=scheduler_v1.OidcToken(
+                        service_account_email=SERVICE_ACCOUNT_EMAIL,
+                        audience=target_url
+        )
             ),
             schedule=cron_schedule,
             time_zone="UTC",
